@@ -1,4 +1,4 @@
-
+foo
 ## What is Batfish?
 
 Batfish is a network configuration analysis tool that can find bugs and guarantee the correctness of (planned or current) network configurations. It enables network engineers to rapidly and safely evolve their network, without fear of outages or security breaches.
