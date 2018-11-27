@@ -13943,6 +13943,19 @@
             "          TTL_EXCEEDED:'ttl-exceeded')",
             "        NEWLINE:'\\n')",
             "      (extended_access_list_tail",
+            "        num = DEC:'310'",
+            "        ala = (access_list_action",
+            "          PERMIT:'permit')",
+            "        prot = (protocol",
+            "          IP:'ip')",
+            "        srcipr = (access_list_ip_range",
+            "          ANY:'any')",
+            "        dstipr = (access_list_ip_range",
+            "          ANY:'any')",
+            "        (extended_access_list_additional_feature",
+            "          FRAGMENTS:'fragments')",
+            "        NEWLINE:'\\n')",
+            "      (extended_access_list_tail",
             "        num = DEC:'410'",
             "        ala = (access_list_action",
             "          DENY:'deny')",
@@ -61212,34 +61225,35 @@
                 25,
                 26,
                 27,
-                28
+                28,
+                29
               ],
               "numReferrers" : 0
             },
             "blah" : {
               "definitionLines" : [
-                35,
-                36
+                36,
+                37
               ],
               "numReferrers" : 0
             },
             "extended" : {
               "definitionLines" : [
-                31
+                32
               ],
               "numReferrers" : 0
             },
             "standard" : {
               "definitionLines" : [
-                33
+                34
               ],
               "numReferrers" : 0
             },
             "test-codes" : {
               "definitionLines" : [
-                62,
                 63,
-                64
+                64,
+                65
               ],
               "numReferrers" : 0
             }
@@ -61247,15 +61261,15 @@
           "ipv4 prefix-list" : {
             "allowprefix" : {
               "definitionLines" : [
-                38,
-                39
+                39,
+                40
               ],
               "numReferrers" : 0
             },
             "allowprefix-asa" : {
               "definitionLines" : [
-                41,
-                42
+                42,
+                43
               ],
               "numReferrers" : 0
             }

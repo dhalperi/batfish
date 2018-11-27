@@ -4997,6 +4997,27 @@
                 "name" : "300 permit icmp any any ttl-exceeded  ! type 11, code 0"
               },
               {
+                "action" : "PERMIT",
+                "matchCondition" : {
+                  "class" : "org.batfish.datamodel.acl.MatchHeaderSpace",
+                  "headerSpace" : {
+                    "dstIps" : {
+                      "class" : "org.batfish.datamodel.IpWildcardIpSpace",
+                      "ipWildcard" : "0.0.0.0/0"
+                    },
+                    "fragmentOffsets" : [
+                      "1-8191"
+                    ],
+                    "negate" : false,
+                    "srcIps" : {
+                      "class" : "org.batfish.datamodel.IpWildcardIpSpace",
+                      "ipWildcard" : "0.0.0.0/0"
+                    }
+                  }
+                },
+                "name" : "310 permit ip any any fragments"
+              },
+              {
                 "action" : "DENY",
                 "matchCondition" : {
                   "class" : "org.batfish.datamodel.acl.MatchHeaderSpace",

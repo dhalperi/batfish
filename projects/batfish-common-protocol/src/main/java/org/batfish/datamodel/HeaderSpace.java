@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.SortedSet;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.batfish.common.util.CommonUtil;
 
@@ -269,7 +270,7 @@ public class HeaderSpace implements Serializable, Comparable<HeaderSpace> {
       return _tcpFlags;
     }
 
-    public Builder setDscps(Iterable<Integer> dscps) {
+    public Builder setDscps(@Nonnull Iterable<Integer> dscps) {
       _dscps = ImmutableSortedSet.copyOf(dscps);
       return this;
     }
@@ -284,37 +285,37 @@ public class HeaderSpace implements Serializable, Comparable<HeaderSpace> {
       return this;
     }
 
-    public Builder setDstPorts(Iterable<SubRange> dstPorts) {
+    public Builder setDstPorts(@Nonnull Iterable<SubRange> dstPorts) {
       _dstPorts = ImmutableSortedSet.copyOf(dstPorts);
       return this;
     }
 
-    public Builder setDstProtocols(Iterable<Protocol> dstProtocols) {
+    public Builder setDstProtocols(@Nonnull Iterable<Protocol> dstProtocols) {
       _dstProtocols = ImmutableSortedSet.copyOf(dstProtocols);
       return this;
     }
 
-    public Builder setEcns(Iterable<Integer> ecns) {
+    public Builder setEcns(@Nonnull Iterable<Integer> ecns) {
       _ecns = ImmutableSortedSet.copyOf(ecns);
       return this;
     }
 
-    public Builder setFragmentOffsets(Iterable<SubRange> fragmentOffsets) {
+    public Builder setFragmentOffsets(@Nonnull Iterable<SubRange> fragmentOffsets) {
       _fragmentOffsets = ImmutableSortedSet.copyOf(fragmentOffsets);
       return this;
     }
 
-    public Builder setIcmpCodes(Iterable<SubRange> icmpCodes) {
+    public Builder setIcmpCodes(@Nonnull Iterable<SubRange> icmpCodes) {
       _icmpCodes = ImmutableSortedSet.copyOf(icmpCodes);
       return this;
     }
 
-    public Builder setIcmpTypes(Iterable<SubRange> icmpTypes) {
+    public Builder setIcmpTypes(@Nonnull Iterable<SubRange> icmpTypes) {
       _icmpTypes = ImmutableSortedSet.copyOf(icmpTypes);
       return this;
     }
 
-    public Builder setIpProtocols(Iterable<IpProtocol> ipProtocols) {
+    public Builder setIpProtocols(@Nonnull Iterable<IpProtocol> ipProtocols) {
       _ipProtocols = ImmutableSortedSet.copyOf(ipProtocols);
       return this;
     }
@@ -324,7 +325,7 @@ public class HeaderSpace implements Serializable, Comparable<HeaderSpace> {
       return this;
     }
 
-    public Builder setNotDscps(Iterable<Integer> notDscps) {
+    public Builder setNotDscps(@Nonnull Iterable<Integer> notDscps) {
       _notDscps = ImmutableSortedSet.copyOf(notDscps);
       return this;
     }
@@ -339,42 +340,42 @@ public class HeaderSpace implements Serializable, Comparable<HeaderSpace> {
       return this;
     }
 
-    public Builder setNotDstPorts(Iterable<SubRange> notDstPorts) {
+    public Builder setNotDstPorts(@Nonnull Iterable<SubRange> notDstPorts) {
       _notDstPorts = ImmutableSortedSet.copyOf(notDstPorts);
       return this;
     }
 
-    public Builder setNotDstProtocols(Iterable<Protocol> notDstProtocols) {
+    public Builder setNotDstProtocols(@Nonnull Iterable<Protocol> notDstProtocols) {
       _notDstProtocols = ImmutableSortedSet.copyOf(notDstProtocols);
       return this;
     }
 
-    public Builder setNotEcns(Iterable<Integer> notEcns) {
+    public Builder setNotEcns(@Nonnull Iterable<Integer> notEcns) {
       _notEcns = ImmutableSortedSet.copyOf(notEcns);
       return this;
     }
 
-    public Builder setNotFragmentOffsets(Iterable<SubRange> notFragmentOffsets) {
+    public Builder setNotFragmentOffsets(@Nonnull Iterable<SubRange> notFragmentOffsets) {
       _notFragmentOffsets = ImmutableSortedSet.copyOf(notFragmentOffsets);
       return this;
     }
 
-    public Builder setNotIcmpCodes(Iterable<SubRange> notIcmpCodes) {
+    public Builder setNotIcmpCodes(@Nonnull Iterable<SubRange> notIcmpCodes) {
       _notIcmpCodes = ImmutableSortedSet.copyOf(notIcmpCodes);
       return this;
     }
 
-    public Builder setNotIcmpTypes(Iterable<SubRange> notIcmpTypes) {
+    public Builder setNotIcmpTypes(@Nonnull Iterable<SubRange> notIcmpTypes) {
       _notIcmpTypes = ImmutableSortedSet.copyOf(notIcmpTypes);
       return this;
     }
 
-    public Builder setNotIpProtocols(Iterable<IpProtocol> notIpProtocols) {
+    public Builder setNotIpProtocols(@Nonnull Iterable<IpProtocol> notIpProtocols) {
       _notIpProtocols = ImmutableSortedSet.copyOf(notIpProtocols);
       return this;
     }
 
-    public Builder setNotPacketLengths(Iterable<SubRange> notPacketLengths) {
+    public Builder setNotPacketLengths(@Nonnull Iterable<SubRange> notPacketLengths) {
       _notPacketLengths = ImmutableSortedSet.copyOf(notPacketLengths);
       return this;
     }
@@ -389,22 +390,22 @@ public class HeaderSpace implements Serializable, Comparable<HeaderSpace> {
       return this;
     }
 
-    public Builder setNotSrcPorts(Iterable<SubRange> notSrcPorts) {
+    public Builder setNotSrcPorts(@Nonnull Iterable<SubRange> notSrcPorts) {
       _notSrcPorts = ImmutableSortedSet.copyOf(notSrcPorts);
       return this;
     }
 
-    public Builder setNotSrcProtocols(Iterable<Protocol> notSrcProtocols) {
+    public Builder setNotSrcProtocols(@Nonnull Iterable<Protocol> notSrcProtocols) {
       _notSrcProtocols = ImmutableSortedSet.copyOf(notSrcProtocols);
       return this;
     }
 
-    public Builder setPacketLengths(Iterable<SubRange> packetLengths) {
+    public Builder setPacketLengths(@Nonnull Iterable<SubRange> packetLengths) {
       _packetLengths = ImmutableSortedSet.copyOf(packetLengths);
       return this;
     }
 
-    public Builder setSrcIps(Iterable<IpWildcard> srcIps) {
+    public Builder setSrcIps(@Nonnull Iterable<IpWildcard> srcIps) {
       _srcIps = IpWildcardSetIpSpace.builder().including(srcIps).build();
       return this;
     }
@@ -424,32 +425,32 @@ public class HeaderSpace implements Serializable, Comparable<HeaderSpace> {
       return this;
     }
 
-    public Builder setSrcOrDstPorts(Iterable<SubRange> srcOrDstPorts) {
+    public Builder setSrcOrDstPorts(@Nonnull Iterable<SubRange> srcOrDstPorts) {
       _srcOrDstPorts = ImmutableSortedSet.copyOf(srcOrDstPorts);
       return this;
     }
 
-    public Builder setSrcOrDstProtocols(Iterable<Protocol> srcOrDstProtocols) {
+    public Builder setSrcOrDstProtocols(@Nonnull Iterable<Protocol> srcOrDstProtocols) {
       _srcOrDstProtocols = ImmutableSortedSet.copyOf(srcOrDstProtocols);
       return this;
     }
 
-    public Builder setSrcPorts(Iterable<SubRange> srcPorts) {
+    public Builder setSrcPorts(@Nonnull Iterable<SubRange> srcPorts) {
       _srcPorts = ImmutableSortedSet.copyOf(srcPorts);
       return this;
     }
 
-    public Builder setSrcProtocols(Iterable<Protocol> srcProtocols) {
+    public Builder setSrcProtocols(@Nonnull Iterable<Protocol> srcProtocols) {
       _srcProtocols = ImmutableSortedSet.copyOf(srcProtocols);
       return this;
     }
 
-    public Builder setStates(Iterable<FlowState> states) {
+    public Builder setStates(@Nonnull Iterable<FlowState> states) {
       _states = ImmutableSortedSet.copyOf(states);
       return this;
     }
 
-    public Builder setTcpFlags(Iterable<TcpFlagsMatchConditions> tcpFlags) {
+    public Builder setTcpFlags(@Nonnull Iterable<TcpFlagsMatchConditions> tcpFlags) {
       _tcpFlags = ImmutableList.copyOf(tcpFlags);
       return this;
     }

@@ -1,5 +1,6 @@
 package org.batfish.grammar.cisco;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.toCollection;
 import static org.batfish.datamodel.ConfigurationFormat.ARISTA;
@@ -300,6 +301,7 @@ import org.batfish.datamodel.IcmpCode;
 import org.batfish.datamodel.IcmpType;
 import org.batfish.datamodel.IkeAuthenticationMethod;
 import org.batfish.datamodel.IkeHashingAlgorithm;
+import org.batfish.datamodel.IntegerSpace;
 import org.batfish.datamodel.InterfaceAddress;
 import org.batfish.datamodel.Ip;
 import org.batfish.datamodel.Ip6;
@@ -5052,6 +5054,7 @@ public class CiscoControlPlaneExtractor extends CiscoParserBaseListener
           ctx.alps_src != null ? toPortRanges(ctx.alps_src) : Collections.emptyList();
       List<SubRange> dstPortRanges =
           ctx.alps_dst != null ? toPortRanges(ctx.alps_dst) : Collections.emptyList();
+      IntegerSpace fragmentOffsets = null;
       Integer icmpType = null;
       Integer icmpCode = null;
       List<TcpFlagsMatchConditions> tcpFlags = new ArrayList<>();
@@ -5107,6 +5110,12 @@ public class CiscoControlPlaneExtractor extends CiscoParserBaseListener
                   .setTcpFlags(TcpFlags.builder().setFin(true).build())
                   .setUseFin(true)
                   .build());
+        } else if (feature.FRAGMENTS() != null) {
+          fragmentOffsets =
+              IntegerSpace.builder()
+                  .including(firstNonNull(fragmentOffsets, IntegerSpace.of(new SubRange(0, 8191))))
+                  .excluding(0)
+                  .build();
         } else if (feature.HOST_UNKNOWN() != null) {
           icmpType = IcmpType.DESTINATION_UNREACHABLE;
           icmpCode = IcmpCode.DESTINATION_HOST_UNKNOWN;
@@ -5183,6 +5192,7 @@ public class CiscoControlPlaneExtractor extends CiscoParserBaseListener
           .setDscps(dscps)
           .setDstPortRanges(dstPortRanges)
           .setEcns(ecns)
+          .setFragmentOffsets(fragmentOffsets)
           .setIcmpCode(icmpCode)
           .setIcmpType(icmpType)
           .setProtocol(protocol)
