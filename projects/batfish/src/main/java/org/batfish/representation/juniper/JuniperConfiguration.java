@@ -144,6 +144,7 @@ import org.batfish.datamodel.routing_policy.statement.SetOspfMetricType;
 import org.batfish.datamodel.routing_policy.statement.Statement;
 import org.batfish.datamodel.routing_policy.statement.Statements;
 import org.batfish.datamodel.transformation.Transformation;
+import org.batfish.grammar.flatjuniper.BgpCommunityRegex;
 import org.batfish.representation.juniper.BgpGroup.BgpGroupType;
 import org.batfish.representation.juniper.Interface.OspfInterfaceType;
 import org.batfish.representation.juniper.Zone.AddressBookType;
@@ -1250,12 +1251,12 @@ public final class JuniperConfiguration extends VendorConfiguration {
     return newRoute.build();
   }
 
-  private org.batfish.datamodel.CommunityList toCommunityList(CommunityList cl) {
+  private static org.batfish.datamodel.CommunityList toCommunityList(CommunityList cl) {
     String name = cl.getName();
     List<org.batfish.datamodel.CommunityListLine> newLines = new ArrayList<>();
     for (CommunityListLine line : cl.getLines()) {
       String regex = line.getText();
-      String javaRegex = communityRegexToJavaRegex(regex);
+      String javaRegex = BgpCommunityRegex.convertToJavaRegex(regex);
       org.batfish.datamodel.CommunityListLine newLine =
           new org.batfish.datamodel.CommunityListLine(
               LineAction.PERMIT, new RegexCommunitySet(javaRegex));
