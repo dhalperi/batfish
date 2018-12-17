@@ -1,9 +1,7 @@
 package org.batfish.representation.juniper;
 
 import java.io.Serializable;
-import java.util.List;
-import org.batfish.common.Warnings;
-import org.batfish.datamodel.IpAccessListLine;
+import org.batfish.datamodel.acl.AclLineMatchExpr;
 
 public class FwFromHostProtocol implements Serializable {
 
@@ -16,7 +14,7 @@ public class FwFromHostProtocol implements Serializable {
     _protocol = protocol;
   }
 
-  public void applyTo(List<IpAccessListLine> lines, Warnings w) {
-    lines.addAll(_protocol.getLines());
+  public AclLineMatchExpr getMatchExpr() {
+    return _protocol.getMatchCondition();
   }
 }

@@ -11,6 +11,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -289,6 +290,20 @@ public class HeaderSpace implements Serializable, Comparable<HeaderSpace> {
       return this;
     }
 
+    public Builder setDstPorts(int... dstPorts) {
+      return setDstPorts(
+          Arrays.stream(dstPorts)
+              .mapToObj(i -> new SubRange(i, i))
+              .collect(ImmutableList.toImmutableList()));
+    }
+
+    public Builder setDstPorts(NamedPort... dstPorts) {
+      return setDstPorts(
+          Arrays.stream(dstPorts)
+              .map(np -> new SubRange(np.number(), np.number()))
+              .collect(ImmutableList.toImmutableList()));
+    }
+
     public Builder setDstProtocols(Iterable<Protocol> dstProtocols) {
       _dstProtocols = ImmutableSortedSet.copyOf(dstProtocols);
       return this;
@@ -312,6 +327,17 @@ public class HeaderSpace implements Serializable, Comparable<HeaderSpace> {
     public Builder setIcmpTypes(Iterable<SubRange> icmpTypes) {
       _icmpTypes = ImmutableSortedSet.copyOf(icmpTypes);
       return this;
+    }
+
+    public Builder setIcmpTypes(int... icmpTypes) {
+      return setIcmpTypes(
+          Arrays.stream(icmpTypes)
+              .mapToObj(i -> new SubRange(i, i))
+              .collect(ImmutableList.toImmutableList()));
+    }
+
+    public Builder setIpProtocols(IpProtocol... ipProtocols) {
+      return setIpProtocols(Arrays.asList(ipProtocols));
     }
 
     public Builder setIpProtocols(Iterable<IpProtocol> ipProtocols) {

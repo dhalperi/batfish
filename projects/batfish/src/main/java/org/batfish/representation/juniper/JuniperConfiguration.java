@@ -12,7 +12,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -1599,68 +1598,6 @@ public final class JuniperConfiguration extends VendorConfiguration {
     return zoneAcl;
   }
 
-  /**
-   * Convert firewallFilter terms (headerSpace matching) and optional conjunctMatchExpr into a
-   * single ACL.
-   */
-  private IpAccessList fwTermsToIpAccessList(
-      String aclName, Collection<FwTerm> terms, @Nullable AclLineMatchExpr conjunctMatchExpr)
-      throws VendorConversionException {
-    List<IpAccessListLine> lines = new ArrayList<>();
-    for (FwTerm term : terms) {
-      // action
-      LineAction action;
-      if (term.getThens().contains(FwThenAccept.INSTANCE)) {
-        action = LineAction.PERMIT;
-      } else if (term.getThens().contains(FwThenDiscard.INSTANCE)) {
-        action = LineAction.DENY;
-      } else if (term.getThens().contains(FwThenNextTerm.INSTANCE)) {
-        // TODO: throw error if any transformation is being done
-        continue;
-      } else if (term.getThens().contains(FwThenNop.INSTANCE)) {
-        // we assume for now that any 'nop' operations imply acceptance
-        action = LineAction.PERMIT;
-      } else {
-        _w.redFlag(
-            "missing action in firewall filter: '" + aclName + "', term: '" + term.getName() + "'");
-        action = LineAction.DENY;
-      }
-      HeaderSpace.Builder matchCondition = HeaderSpace.builder();
-      for (FwFrom from : term.getFroms()) {
-        from.applyTo(matchCondition, this, _w, _c);
-      }
-      boolean addLine =
-          term.getFromApplicationSetMembers().isEmpty()
-              && term.getFromHostProtocols().isEmpty()
-              && term.getFromHostServices().isEmpty();
-      for (FwFromHostProtocol from : term.getFromHostProtocols()) {
-        from.applyTo(lines, _w);
-      }
-      for (FwFromHostService from : term.getFromHostServices()) {
-        from.applyTo(lines, _w);
-      }
-      for (FwFromApplicationSetMember fromApplicationSetMember :
-          term.getFromApplicationSetMembers()) {
-        fromApplicationSetMember.applyTo(this, matchCondition, action, lines, _w);
-      }
-      if (addLine) {
-        IpAccessListLine line =
-            IpAccessListLine.builder()
-                .setAction(action)
-                .setMatchCondition(new MatchHeaderSpace(matchCondition.build()))
-                .setName(term.getName())
-                .build();
-        lines.add(line);
-      }
-    }
-    return IpAccessList.builder()
-        .setName(aclName)
-        .setLines(mergeIpAccessListLines(lines, conjunctMatchExpr))
-        .setSourceName(aclName)
-        .setSourceType(JuniperStructureType.FIREWALL_FILTER.getDescription())
-        .build();
-  }
-
   /** Merge the list of lines with the specified conjunct match expression. */
   private static List<IpAccessListLine> mergeIpAccessListLines(
       List<IpAccessListLine> lines, @Nullable AclLineMatchExpr conjunctMatchExpr) {
@@ -1682,7 +1619,7 @@ public final class JuniperConfiguration extends VendorConfiguration {
   /** Convert a firewallFilter into an equivalent ACL. */
   IpAccessList toIpAccessList(FirewallFilter filter) throws VendorConversionException {
     String name = filter.getName();
-    AclLineMatchExpr matchSrcInterface = null;
+    ImmutableList.Builder<IpAccessListLine> lines = ImmutableList.builder();
 
     /*
      * If srcInterfaces (from-zone) are filtered (this is the case for security policies), then
@@ -1690,7 +1627,7 @@ public final class JuniperConfiguration extends VendorConfiguration {
      */
     String zoneName = filter.getFromZone();
     if (zoneName != null) {
-      matchSrcInterface =
+      AclLineMatchExpr matchSrcInterface =
           new MatchSrcInterface(
               _masterLogicalSystem
                   .getZones()
@@ -1699,10 +1636,69 @@ public final class JuniperConfiguration extends VendorConfiguration {
                   .stream()
                   .map(Interface::getName)
                   .collect(ImmutableList.toImmutableList()));
+      lines.add(
+          IpAccessListLine.rejecting()
+              .setMatchCondition(new NotMatchExpr(matchSrcInterface))
+              .setName("Only-zone-" + zoneName)
+              .build());
     }
 
     /* Return an ACL that is the logical AND of srcInterface filter and headerSpace filter */
-    return fwTermsToIpAccessList(name, filter.getTerms().values(), matchSrcInterface);
+    List<IpAccessListLine> badLines = new ArrayList<>();
+    for (FwTerm term : filter.getTerms().values()) {
+      // action
+      LineAction action;
+      if (term.getThens().contains(FwThenAccept.INSTANCE)) {
+        action = LineAction.PERMIT;
+      } else if (term.getThens().contains(FwThenDiscard.INSTANCE)) {
+        action = LineAction.DENY;
+      } else if (term.getThens().contains(FwThenNextTerm.INSTANCE)) {
+        // TODO: throw error if any transformation is being done
+        continue;
+      } else if (term.getThens().contains(FwThenNop.INSTANCE)) {
+        // we assume for now that any 'nop' operations imply acceptance
+        action = LineAction.PERMIT;
+      } else {
+        _w.redFlag(
+            "missing action in firewall filter: '" + name + "', term: '" + term.getName() + "'");
+        action = LineAction.DENY;
+      }
+
+      List<AclLineMatchExpr> matchConditions;
+      HeaderSpace.Builder matchCondition = HeaderSpace.builder();
+      for (FwFrom from : term.getFroms()) {
+        from.applyTo(matchCondition, this, _w, _c);
+      }
+      boolean addLine =
+          term.getFromApplicationSetMembers().isEmpty()
+              && term.getFromHostProtocols().isEmpty()
+              && term.getFromHostServices().isEmpty();
+      for (FwFromHostProtocol from : term.getFromHostProtocols()) {
+        from.applyTo(badLines);
+      }
+      for (FwFromHostService from : term.getFromHostServices()) {
+        from.applyTo(badLines, _w);
+      }
+      for (FwFromApplicationSetMember fromApplicationSetMember :
+          term.getFromApplicationSetMembers()) {
+        fromApplicationSetMember.applyTo(this, matchCondition, action, badLines, _w);
+      }
+      if (addLine) {
+        IpAccessListLine line =
+            IpAccessListLine.builder()
+                .setAction(action)
+                .setMatchCondition(new MatchHeaderSpace(matchCondition.build()))
+                .setName(term.getName())
+                .build();
+        badLines.add(line);
+      }
+    }
+    return IpAccessList.builder()
+        .setName(name)
+        .setLines(lines.build())
+        .setSourceName(name)
+        .setSourceType(JuniperStructureType.FIREWALL_FILTER.getDescription())
+        .build();
   }
 
   private org.batfish.datamodel.IpsecPolicy toIpsecPolicy(IpsecPolicy oldIpsecPolicy) {
