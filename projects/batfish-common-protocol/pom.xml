@@ -277,6 +277,11 @@
     </dependency>
 
     <dependency>
+      <groupId>org.jgrapht</groupId>
+      <artifactId>jgrapht-io</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>org.parboiled</groupId>
       <artifactId>parboiled-core</artifactId>
     </dependency>

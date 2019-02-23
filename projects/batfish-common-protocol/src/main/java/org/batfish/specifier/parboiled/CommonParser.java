@@ -142,7 +142,7 @@ public class CommonParser extends BaseParser<AstNode> {
   }
 
   public Rule WhiteSpace() {
-    return ZeroOrMore(AnyOf(" \t"));
+    return ZeroOrMore(FirstOf(Ch(' '), Ch('\t')));
   }
 
   public Rule ZoneNameLiteral() {
