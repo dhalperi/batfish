@@ -41,12 +41,23 @@ public class AsPathRegex extends BaseParser<String> {
 
   Rule AsPath() {
     return Sequence(
+        Terms(), // pop(1)
+        ZeroOrMore(
+            IgnoreSpace(),
+            '|',
+            IgnoreSpace(),
+            Terms(), // pop()
+            push(String.format("%s|%s", pop(1), pop()))),
+        push(String.format("^(%s)$", pop())));
+  }
+
+  Rule Terms() {
+    return Sequence(
         Term(), // first term, will be pop(1) below.
         ZeroOrMore(
             AtLeastOneSpace(),
             Term(), // pop()
-            push(String.format("%s%s", pop(1), pop()))),
-        push(String.format("^%s$", pop())));
+            push(String.format("%s%s", pop(1), pop()))));
   }
 
   Rule Term() {

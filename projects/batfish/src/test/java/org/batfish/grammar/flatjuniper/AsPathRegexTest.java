@@ -311,12 +311,38 @@ public class AsPathRegexTest {
 
   @Test
   public void testRangeInGroup() {
-    String regex = "1 3-4";
-    assertMatches(regex, 1L, 3L);
-    assertMatches(regex, 1L, 4L);
+    for (String regex : new String[] {"1 3-4", "(1 3-4)"}) {
+      assertMatches(regex, 1L, 3L);
+      assertMatches(regex, 1L, 4L);
+      assertDoesNotMatch(regex);
+      assertDoesNotMatch(regex, 1L);
+      assertDoesNotMatch(regex, 3L);
+      assertDoesNotMatch(regex, 1L, 3L, 5L);
+    }
+  }
+
+  @Test
+  public void testGroupWithOps() {
+    String regex = "(1* 3+ 4)";
+    assertMatches(regex, 3L, 4L);
+    assertMatches(regex, 3L, 3L, 4L);
+    assertMatches(regex, 1L, 3L, 4L);
+    assertMatches(regex, 1L, 1L, 1L, 3L, 3L, 4L);
     assertDoesNotMatch(regex);
     assertDoesNotMatch(regex, 1L);
-    assertDoesNotMatch(regex, 3L);
+    assertDoesNotMatch(regex, 1L, 4L);
     assertDoesNotMatch(regex, 1L, 3L, 5L);
+  }
+
+  @Test
+  public void testOrWithOps() {
+    String regex = "1+ | 3-4";
+    assertMatches(regex, 1L);
+    assertMatches(regex, 1L, 1L);
+    assertMatches(regex, 3L);
+    assertMatches(regex, 4L);
+    assertDoesNotMatch(regex);
+    assertDoesNotMatch(regex, 1L, 3L);
+    assertDoesNotMatch(regex, 3L, 4L);
   }
 }
