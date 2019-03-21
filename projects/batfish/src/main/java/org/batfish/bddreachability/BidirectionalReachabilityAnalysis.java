@@ -173,7 +173,7 @@ public final class BidirectionalReachabilityAnalysis {
                 return Stream.of();
               }
 
-              BDD queryConstraint = packet.swapSourceAndDestinationFields(entry.getValue());
+              BDD queryConstraint = packet.computeReverseFlow(entry.getValue());
               return terminationStates.stream()
                   .map(state -> Maps.immutableEntry(state, queryConstraint));
             })
@@ -216,7 +216,7 @@ public final class BidirectionalReachabilityAnalysis {
               if (lastHopMgr != null) {
                 bdd = lastHopMgr.existsLastHop(bdd);
               }
-              bdd = _bddPacket.swapSourceAndDestinationFields(bdd);
+              bdd = _bddPacket.computeReverseFlow(bdd);
               return Maps.immutableEntry(orig, bdd);
             })
         .collect(Collectors.toMap(Entry::getKey, Entry::getValue, BDD::or));
@@ -276,7 +276,7 @@ public final class BidirectionalReachabilityAnalysis {
     if (failReturnFlows.isZero()) {
       return ImmutableMap.of();
     }
-    BDD failForwardFlows = _bddPacket.swapSourceAndDestinationFields(failReturnFlows);
+    BDD failForwardFlows = _bddPacket.computeReverseFlow(failReturnFlows);
     return _originateStateToLocation.entries().stream()
         .flatMap(
             entry -> {
@@ -332,7 +332,7 @@ public final class BidirectionalReachabilityAnalysis {
               bdd = srcMgr.existsSource(bdd);
               bdd = _factory.getLastHopManager().existsLastHop(bdd);
 
-              return Maps.immutableEntry(loc, _bddPacket.swapSourceAndDestinationFields(bdd));
+              return Maps.immutableEntry(loc, _bddPacket.computeReverseFlow(bdd));
             })
         .filter(Objects::nonNull)
         .collect(ImmutableMap.toImmutableMap(Entry::getKey, Entry::getValue, BDD::or));

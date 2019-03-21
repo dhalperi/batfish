@@ -21,6 +21,7 @@ import org.batfish.common.bdd.BDDFlowConstraintGenerator.FlowPreference;
 import org.batfish.datamodel.Flow;
 import org.batfish.datamodel.FlowState;
 import org.batfish.datamodel.Ip;
+import org.batfish.datamodel.IpProtocol;
 import org.batfish.datamodel.Prefix;
 
 /**
@@ -566,5 +567,25 @@ public class BDDPacket {
 
   public BDD swapSourceAndDestinationFields(BDD bdd) {
     return bdd.replace(_swapSourceAndDestinationPairing);
+  }
+
+  public BDD computeReverseFlow(BDD forwardFlow) {
+    BDD reverseTransformedIp = swapSourceAndDestinationFields(forwardFlow);
+
+    // Partition reverse flow by IP protocol to do protocol-specific reversals.
+    BDD reverseStartTcp = reverseTransformedIp.and(_ipProtocol.value(IpProtocol.TCP));
+    BDD reverseEverythingElse = reverseTransformedIp.and(_ipProtocol.value(IpProtocol.TCP).not());
+    // .. sanity check partitioning.
+    assert reverseStartTcp.and(reverseEverythingElse).isZero();
+    assert reverseTransformedIp.equals(reverseStartTcp.or(reverseEverythingElse));
+
+    // Transform TCP, following the rules from TracerouteUtils#getTcpFlagsForReverse.
+    BDD tcpNoSyn = reverseStartTcp.and(_tcpSyn.not());
+    BDD tcpSyn = reverseStartTcp.and(_tcpSyn);
+    BDD tcpSynToSynAck = tcpSyn.and(_tcpAck.not()).exist(_tcpAck).and(_tcpAck);
+    BDD tcpSynAckToAck = tcpSyn.and(_tcpAck).exist(_tcpSyn).and(_tcpSyn.not());
+    BDD reverseTransformedTcp = tcpNoSyn.or(tcpSynToSynAck).or(tcpSynAckToAck);
+
+    return reverseTransformedTcp.or(reverseEverythingElse);
   }
 }

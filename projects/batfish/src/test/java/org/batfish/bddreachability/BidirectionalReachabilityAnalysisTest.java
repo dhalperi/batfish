@@ -135,7 +135,6 @@ public final class BidirectionalReachabilityAnalysisTest {
                 dst1.and(src2))));
   }
 
-  @SuppressWarnings("unchecked")
   @Test
   public void testInitializeSessions() throws IOException {
     NetworkFactory nf = new NetworkFactory();
@@ -382,7 +381,6 @@ public final class BidirectionalReachabilityAnalysisTest {
     }
   }
 
-  @SuppressWarnings("unchecked")
   @Test
   public void testBidirectionalReachabilitySuccess() throws IOException {
     NetworkFactory nf = new NetworkFactory();
@@ -543,7 +541,6 @@ public final class BidirectionalReachabilityAnalysisTest {
     assertThat(result.getStartLocationReturnPassFailureBdds().entrySet(), Matchers.empty());
   }
 
-  @SuppressWarnings("unchecked")
   @Test
   public void testBidirectionalReachabilityFailure() throws IOException {
     NetworkFactory nf = new NetworkFactory();
