@@ -3031,30 +3031,33 @@ public class Batfish extends PluginConsumer implements IBatfish {
       try (ActiveSpan span1 =
           GlobalTracer.get().buildSpan("bddLoopDetection.computeResultFlows").startActive()) {
         assert span1 != null; // avoid unused warning
-        return loopBDDs.entrySet().stream()
-            .map(
-                entry ->
-                    pkt.getFlow(entry.getValue())
-                        .map(
-                            fb -> {
-                              IngressLocation loc = entry.getKey();
-                              fb.setTag(flowTag);
-                              fb.setIngressNode(loc.getNode());
-                              switch (loc.getType()) {
-                                case INTERFACE_LINK:
-                                  fb.setIngressInterface(loc.getInterface());
-                                  break;
-                                case VRF:
-                                  fb.setIngressVrf(loc.getVrf());
-                                  break;
-                                default:
-                                  throw new BatfishException(
-                                      "Unknown Location Type: " + loc.getType());
-                              }
-                              return fb.build();
-                            }))
-            .flatMap(optional -> optional.map(Stream::of).orElse(Stream.empty()))
-            .collect(ImmutableSet.toImmutableSet());
+        ImmutableSet<Flow> collect =
+            loopBDDs.entrySet().stream()
+                .map(
+                    entry ->
+                        pkt.getFlow(entry.getValue())
+                            .map(
+                                fb -> {
+                                  IngressLocation loc = entry.getKey();
+                                  fb.setTag(flowTag);
+                                  fb.setIngressNode(loc.getNode());
+                                  switch (loc.getType()) {
+                                    case INTERFACE_LINK:
+                                      fb.setIngressInterface(loc.getInterface());
+                                      break;
+                                    case VRF:
+                                      fb.setIngressVrf(loc.getVrf());
+                                      break;
+                                    default:
+                                      throw new BatfishException(
+                                          "Unknown Location Type: " + loc.getType());
+                                  }
+                                  return fb.build();
+                                }))
+                .flatMap(optional -> optional.map(Stream::of).orElse(Stream.empty()))
+                .collect(ImmutableSet.toImmutableSet());
+        System.err.println(pkt.getFactory().getCacheStats());
+        return collect;
       }
     }
   }

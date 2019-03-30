@@ -266,6 +266,8 @@ public final class ForwardingAnalysisImpl implements ForwardingAnalysis {
               externalIps);
 
       assert sanityCheck(ipSpaceToBDD, configurations);
+
+      System.err.println(ipSpaceToBDD.getBDDInteger().getFactory().getCacheStats());
     }
   }
 

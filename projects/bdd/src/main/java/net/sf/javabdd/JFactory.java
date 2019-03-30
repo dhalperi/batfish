@@ -48,7 +48,7 @@ import javax.annotation.Nonnull;
  */
 public final class JFactory extends BDDFactory {
   /** Whether to maintain (and in some cases print) statistics about the cache use. */
-  private static final boolean CACHESTATS = false;
+  private static final boolean CACHESTATS = true;
 
   /**
    * Whether to flush (clear completely) the cache when live BDD nodes are garbage collected. If
