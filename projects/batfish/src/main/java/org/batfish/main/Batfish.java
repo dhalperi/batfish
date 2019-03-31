@@ -3056,7 +3056,7 @@ public class Batfish extends PluginConsumer implements IBatfish {
                                 }))
                 .flatMap(optional -> optional.map(Stream::of).orElse(Stream.empty()))
                 .collect(ImmutableSet.toImmutableSet());
-        System.err.println(pkt.getFactory().getCacheStats());
+        System.err.println("final: " + pkt.getFactory().getCacheStats());
         return collect;
       }
     }

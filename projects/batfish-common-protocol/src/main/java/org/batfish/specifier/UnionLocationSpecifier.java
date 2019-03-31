@@ -1,6 +1,6 @@
 package org.batfish.specifier;
 
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableSet;
 import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nonnull;
@@ -23,7 +23,10 @@ public final class UnionLocationSpecifier implements LocationSpecifier {
 
   @Override
   public Set<Location> resolve(SpecifierContext ctxt) {
-    return Sets.union(_locationSpecifier1.resolve(ctxt), _locationSpecifier2.resolve(ctxt));
+    return ImmutableSet.<Location>builder()
+        .addAll(_locationSpecifier1.resolve(ctxt))
+        .addAll(_locationSpecifier2.resolve(ctxt))
+        .build();
   }
 
   @Override

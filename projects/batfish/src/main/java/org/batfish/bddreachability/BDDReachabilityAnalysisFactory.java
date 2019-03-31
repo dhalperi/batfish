@@ -29,8 +29,8 @@ import io.opentracing.ActiveSpan;
 import io.opentracing.util.GlobalTracer;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -1431,8 +1431,8 @@ public final class BDDReachabilityAnalysisFactory {
     private Map<PortField, BDD> _portRanges;
 
     public RangeComputer() {
-      _ipRanges = new HashMap<>();
-      _portRanges = new HashMap<>();
+      _ipRanges = new LinkedHashMap<>();
+      _portRanges = new LinkedHashMap<>();
     }
 
     public Map<IpField, BDD> getIpRanges() {
@@ -1551,7 +1551,7 @@ public final class BDDReachabilityAnalysisFactory {
       IpSpaceToBDD srcIpSpaceToBDD = _bddPacket.getSrcIpSpaceToBDD();
 
       // convert Locations to StateExprs, and merge srcIp constraints
-      Map<StateExpr, BDD> rootConstraints = new HashMap<>();
+      Map<StateExpr, BDD> rootConstraints = new LinkedHashMap<>();
       for (IpSpaceAssignment.Entry entry : srcIpSpaceAssignment.getEntries()) {
         BDD srcIpSpaceBDD = entry.getIpSpace().accept(srcIpSpaceToBDD);
         entry.getLocations().stream()

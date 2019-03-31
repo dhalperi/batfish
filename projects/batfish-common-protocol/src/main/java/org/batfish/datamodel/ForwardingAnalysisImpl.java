@@ -10,18 +10,21 @@ import static org.batfish.common.util.CollectionUtil.toImmutableMap;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import io.opentracing.ActiveSpan;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import net.sf.javabdd.BDD;
@@ -348,7 +351,8 @@ public final class ForwardingAnalysisImpl implements ForwardingAnalysis {
                         arpTrueEdgeNextHopIp.get(nodeEntry.getKey()).get(vrfEntry.getKey());
                     return Sets.union(dstIp.keySet(), nextHopIp.keySet()).stream()
                         .collect(
-                            ImmutableMap.toImmutableMap(
+                            ImmutableSortedMap.toImmutableSortedMap(
+                                Ordering.natural(),
                                 Function.identity(),
                                 edge -> AclIpSpace.union(dstIp.get(edge), nextHopIp.get(edge))));
                   }));
@@ -842,15 +846,17 @@ public final class ForwardingAnalysisImpl implements ForwardingAnalysis {
               toImmutableMap(
                   nodeEntry.getValue(),
                   Entry::getKey,
-                  vrfEntry ->
-                      vrfEntry.getValue().allEntries().stream()
-                          .filter(fibEntry -> fibEntry.getAction() instanceof FibForward)
-                          .collect(
-                              Collectors.groupingBy(
-                                  fibEntry ->
-                                      ((FibForward) fibEntry.getAction()).getInterfaceName(),
-                                  Collectors.mapping(
-                                      FibEntry::getTopLevelRoute, Collectors.toSet())))));
+                  vrfEntry -> {
+                    Collector<AbstractRoute, ?, Set<AbstractRoute>> abstractRouteSetCollector =
+                        (Collector) ImmutableSet.toImmutableSet();
+                    return vrfEntry.getValue().allEntries().stream()
+                        .filter(fibEntry -> fibEntry.getAction() instanceof FibForward)
+                        .collect(
+                            Collectors.groupingBy(
+                                fibEntry -> ((FibForward) fibEntry.getAction()).getInterfaceName(),
+                                Collectors.mapping(
+                                    FibEntry::getTopLevelRoute, abstractRouteSetCollector)));
+                  }));
     }
   }
 
@@ -1014,13 +1020,13 @@ public final class ForwardingAnalysisImpl implements ForwardingAnalysis {
             .buildSpan("ForwardingAnalysisImpl.computeSomeoneReplies")
             .startActive()) {
       assert span != null; // avoid unused warning
-      Map<String, Map<String, AclIpSpace.Builder>> someoneRepliesByNode = new HashMap<>();
+      Map<String, Map<String, AclIpSpace.Builder>> someoneRepliesByNode = new LinkedHashMap<>();
       topology
           .getEdges()
           .forEach(
               edge ->
                   someoneRepliesByNode
-                      .computeIfAbsent(edge.getNode1(), n -> new HashMap<>())
+                      .computeIfAbsent(edge.getNode1(), n -> new LinkedHashMap<>())
                       .computeIfAbsent(edge.getInt1(), i -> AclIpSpace.builder())
                       .thenPermitting((arpReplies.get(edge.getNode2()).get(edge.getInt2()))));
       return someoneRepliesByNode.entrySet().stream()

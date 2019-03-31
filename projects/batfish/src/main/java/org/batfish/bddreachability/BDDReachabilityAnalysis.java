@@ -9,7 +9,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Table;
 import io.opentracing.ActiveSpan;
 import io.opentracing.util.GlobalTracer;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -75,7 +74,7 @@ public class BDDReachabilityAnalysis {
             .buildSpan("BDDReachabilityAnalysis.computeReverseReachableStates")
             .startActive()) {
       assert span != null; // avoid unused warning
-      Map<StateExpr, BDD> reverseReachableStates = new HashMap<>();
+      Map<StateExpr, BDD> reverseReachableStates = new LinkedHashMap<>();
       reverseReachableStates.put(Query.INSTANCE, _queryHeaderSpaceBdd);
       BDDReachabilityUtils.backwardFixpoint(_forwardEdgeTable, reverseReachableStates);
       return ImmutableMap.copyOf(reverseReachableStates);
@@ -88,7 +87,7 @@ public class BDDReachabilityAnalysis {
    * corresponding headerspace BDDs.
    */
   public Map<StateExpr, BDD> computeReverseReachableStates(Map<StateExpr, BDD> roots) {
-    Map<StateExpr, BDD> reverseReachableStates = new HashMap<>(roots);
+    Map<StateExpr, BDD> reverseReachableStates = new LinkedHashMap<>(roots);
     BDDReachabilityUtils.backwardFixpoint(_forwardEdgeTable, reverseReachableStates);
     return ImmutableMap.copyOf(reverseReachableStates);
   }

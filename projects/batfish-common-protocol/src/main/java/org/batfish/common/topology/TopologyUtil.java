@@ -5,13 +5,13 @@ import static org.batfish.common.util.IpsecUtil.retainCompatibleTunnelEdges;
 import static org.batfish.datamodel.Interface.TUNNEL_INTERFACE_TYPES;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
+import com.google.common.collect.TreeBasedTable;
 import com.google.common.graph.EndpointPair;
 import io.opentracing.ActiveSpan;
 import io.opentracing.util.GlobalTracer;
@@ -28,6 +28,8 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -563,8 +565,8 @@ public final class TopologyUtil {
    */
   public static Map<Ip, Map<String, Set<String>>> computeIpInterfaceOwners(
       Map<String, Set<Interface>> allInterfaces, boolean excludeInactive) {
-    Map<Ip, Map<String, Set<String>>> ipOwners = new HashMap<>();
-    Table<ConcreteInterfaceAddress, Integer, Set<Interface>> vrrpGroups = HashBasedTable.create();
+    Map<Ip, Map<String, Set<String>>> ipOwners = new TreeMap<>();
+    Table<ConcreteInterfaceAddress, Integer, Set<Interface>> vrrpGroups = TreeBasedTable.create();
     allInterfaces.forEach(
         (hostname, interfaces) ->
             interfaces.forEach(
@@ -598,8 +600,8 @@ public final class TopologyUtil {
                       .forEach(
                           ip ->
                               ipOwners
-                                  .computeIfAbsent(ip, k -> new HashMap<>())
-                                  .computeIfAbsent(hostname, k -> new HashSet<>())
+                                  .computeIfAbsent(ip, k -> new TreeMap<>())
+                                  .computeIfAbsent(hostname, k -> new TreeSet<>())
                                   .add(i.getName()));
                 }));
     vrrpGroups
@@ -622,8 +624,8 @@ public final class TopologyUtil {
                               (Interface o) -> o.getVrrpGroups().get(groupNum).getPriority())
                           .thenComparing(o -> o.getConcreteAddress().getIp()));
               ipOwners
-                  .computeIfAbsent(address.getIp(), k -> new HashMap<>())
-                  .computeIfAbsent(vrrpMaster.getOwner().getHostname(), k -> new HashSet<>())
+                  .computeIfAbsent(address.getIp(), k -> new TreeMap<>())
+                  .computeIfAbsent(vrrpMaster.getOwner().getHostname(), k -> new TreeSet<>())
                   .add(vrrpMaster.getName());
             });
 
@@ -704,7 +706,7 @@ public final class TopologyUtil {
    */
   public static Map<String, Map<String, IpSpace>> computeVrfOwnedIpSpaces(
       Map<Ip, Map<String, Set<String>>> ipVrfOwners) {
-    Map<String, Map<String, AclIpSpace.Builder>> builders = new HashMap<>();
+    Map<String, Map<String, AclIpSpace.Builder>> builders = new TreeMap<>();
     ipVrfOwners.forEach(
         (ip, ipNodeVrfs) ->
             ipNodeVrfs.forEach(
@@ -712,7 +714,7 @@ public final class TopologyUtil {
                     vrfs.forEach(
                         vrf ->
                             builders
-                                .computeIfAbsent(node, k -> new HashMap<>())
+                                .computeIfAbsent(node, k -> new TreeMap<>())
                                 .computeIfAbsent(vrf, k -> AclIpSpace.builder())
                                 .thenPermitting(ip.toIpSpace()))));
 
