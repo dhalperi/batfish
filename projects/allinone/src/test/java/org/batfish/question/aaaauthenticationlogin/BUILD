@@ -1,0 +1,22 @@
+package(
+    default_testonly = True,
+    default_visibility = ["//visibility:public"],
+)
+
+load("@batfish//skylark:junit.bzl", "junit_tests")
+
+junit_tests(
+    name = "tests",
+    srcs = glob([
+        "**/*Test.java",
+    ]),
+    resources = ["//projects/allinone/src/test/resources"],
+    deps = [
+        "//projects/batfish",
+        "//projects/batfish:batfish_testlib",
+        "//projects/batfish-common-protocol:common",
+        "//projects/batfish-common-protocol:common_testlib",
+        "//projects/question",
+        "@hamcrest//:compile",
+    ],
+)
