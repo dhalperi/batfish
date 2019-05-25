@@ -149,20 +149,19 @@ public class BDDReachabilityAnalysis {
     try (ActiveSpan span =
         GlobalTracer.get().buildSpan("BDDReachabilityAnalysis.fixpoint").startActive()) {
       assert span != null; // avoid unused warning
-      Set<StateExpr> dirtyStates = ImmutableSet.copyOf(reachableSets.keySet());
+      Map<StateExpr, BDD> deltas = ImmutableMap.copyOf(reachableSets);
 
-      while (!dirtyStates.isEmpty()) {
-        Set<StateExpr> newDirtyStates = new HashSet<>();
+      while (!deltas.isEmpty()) {
+        Map<StateExpr, BDD> newDeltas = new HashMap<>();
 
-        dirtyStates.forEach(
-            dirtyState -> {
+        deltas.forEach(
+            (dirtyState, dirtyStateBDD) -> {
               Map<StateExpr, Edge> dirtyStateEdges = edges.row(dirtyState);
               if (dirtyStateEdges == null) {
                 // dirtyState has no edges
                 return;
               }
 
-              BDD dirtyStateBDD = reachableSets.get(dirtyState);
               dirtyStateEdges.forEach(
                   (neighbor, edge) -> {
                     BDD result = traverse.apply(edge, dirtyStateBDD);
@@ -172,15 +171,15 @@ public class BDDReachabilityAnalysis {
 
                     // update neighbor's reachable set
                     BDD oldReach = reachableSets.get(neighbor);
-                    BDD newReach = oldReach == null ? result : oldReach.or(result);
-                    if (oldReach == null || !oldReach.equals(newReach)) {
-                      reachableSets.put(neighbor, newReach);
-                      newDirtyStates.add(neighbor);
+                    BDD diff = oldReach == null ? result : result.diff(oldReach);
+                    if (!diff.isZero()) {
+                      reachableSets.merge(neighbor, diff, BDD::or);
+                      newDeltas.merge(neighbor, diff, BDD::or);
                     }
                   });
             });
 
-        dirtyStates = newDirtyStates;
+        deltas = newDeltas;
       }
     }
   }
