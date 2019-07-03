@@ -3674,9 +3674,41 @@ public final class JFactory extends BDDFactory {
     BddCache_reset(countcache);
   }
 
+  /**
+   * Not all caches are always in use -- some computations go through phases where they are used.
+   * Use the first cell being used as a proxy for the entire cache being used, and simply free
+   * unused caches rather than resizing them.
+   */
+  private void clearUnusedCaches() {
+    if (applycache != null && applycache.table[0].a == -1) {
+      applycache = null;
+    }
+    if (quantcache != null && quantcache.table[0].a == -1) {
+      quantcache = null;
+    }
+    if (appexcache != null && appexcache.table[0].a == -1) {
+      appexcache = null;
+    }
+    if (replacecache != null && replacecache.table[0].a == -1) {
+      replacecache = null;
+    }
+    if (misccache != null && misccache.table[0].a == -1) {
+      misccache = null;
+    }
+    if (multiopcache != null && multiopcache.table[0].a == -1) {
+      multiopcache = null;
+    }
+    if (countcache != null && countcache.table[0].a == -1) {
+      countcache = null;
+    }
+  }
+
   @Override
   public int setCacheSize(int newcachesize) {
     int old = cachesize;
+
+    clearUnusedCaches(); // only reallocate and resize caches if we have to.
+
     BddCache_resize(applycache, newcachesize);
     BddCache_resize(quantcache, newcachesize);
     BddCache_resize(appexcache, newcachesize);
@@ -3690,6 +3722,8 @@ public final class JFactory extends BDDFactory {
   private void bdd_operator_noderesize() {
     if (cacheratio > 0) {
       int newcachesize = bddnodesize / cacheratio;
+
+      clearUnusedCaches();
 
       BddCache_resize(applycache, newcachesize);
       BddCache_resize(quantcache, newcachesize);
