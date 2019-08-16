@@ -2,7 +2,7 @@ package org.batfish.representation.cisco;
 
 import static org.batfish.datamodel.acl.AclLineMatchExprs.and;
 import static org.batfish.datamodel.acl.AclLineMatchExprs.permittedByAcl;
-import static org.batfish.datamodel.transformation.Transformation.when;
+import static org.batfish.datamodel.transformation.Branch.when;
 import static org.batfish.datamodel.transformation.TransformationStep.assignDestinationIp;
 import static org.batfish.datamodel.transformation.TransformationStep.assignSourceIp;
 
@@ -75,7 +75,7 @@ public final class CiscoIosDynamicNat extends CiscoIosNat {
   }
 
   @Override
-  public Optional<Transformation.Builder> toIncomingTransformation(
+  public Optional<Transformation> toIncomingTransformation(
       Map<String, IpAccessList> ipAccessLists, Map<String, NatPool> natPools) {
     // SOURCE_OUTSIDE matches and dynamically translates source addresses on ingress.
     if (getAction() != RuleAction.SOURCE_OUTSIDE) {
@@ -92,7 +92,7 @@ public final class CiscoIosDynamicNat extends CiscoIosNat {
   }
 
   @Override
-  public Optional<Transformation.Builder> toOutgoingTransformation(
+  public Optional<Transformation> toOutgoingTransformation(
       Map<String, IpAccessList> ipAccessLists,
       Map<String, NatPool> natPools,
       Set<String> insideInterfaces,
@@ -162,13 +162,13 @@ public final class CiscoIosDynamicNat extends CiscoIosNat {
    * Returns the (forward) transformation for this dynamic NAT expression using the given condition
    * on which to NAT, pool to NAT into, and the direction of traffic.
    */
-  private Transformation.Builder makeTransformation(
+  private Transformation makeTransformation(
       AclLineMatchExpr shouldNat, NatPool pool, boolean outgoing) {
     TransformationStep step =
         getAction().whatChanges(outgoing) == IpField.SOURCE
             ? assignSourceIp(pool.getFirst(), pool.getLast())
             : assignDestinationIp(pool.getFirst(), pool.getLast());
-    return when(shouldNat).apply(step);
+    return when(shouldNat).apply(step).build();
   }
 
   /**

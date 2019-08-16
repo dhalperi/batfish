@@ -177,6 +177,7 @@ import org.batfish.datamodel.routing_policy.statement.SetOspfMetricType;
 import org.batfish.datamodel.routing_policy.statement.Statement;
 import org.batfish.datamodel.routing_policy.statement.Statements;
 import org.batfish.datamodel.tracking.TrackMethod;
+import org.batfish.datamodel.transformation.Composite;
 import org.batfish.datamodel.transformation.Transformation;
 import org.batfish.datamodel.vendor_family.cisco.Aaa;
 import org.batfish.datamodel.vendor_family.cisco.AaaAuthentication;
@@ -2301,16 +2302,16 @@ public final class CiscoConfiguration extends VendorConfiguration {
     newIface.setIncomingTransformation(
         objectNats.stream()
             .map(nat -> nat.toIncomingTransformation(_networkObjects, _w))
-            .collect(
-                Collectors.collectingAndThen(
-                    Collectors.toList(), CiscoAsaNatUtil::toTransformationChain)));
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(Collectors.collectingAndThen(Collectors.toList(), Composite::new)));
 
     newIface.setOutgoingTransformation(
         objectNats.stream()
             .map(nat -> nat.toOutgoingTransformation(_networkObjects, _w))
-            .collect(
-                Collectors.collectingAndThen(
-                    Collectors.toList(), CiscoAsaNatUtil::toTransformationChain)));
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(Collectors.collectingAndThen(Collectors.toList(), Composite::new)));
   }
 
   private void generateCiscoIosNatTransformations(
@@ -2331,7 +2332,7 @@ public final class CiscoConfiguration extends VendorConfiguration {
     // can be modified independently but not jointly. A single CiscoIosNat can represent an incoming
     // NAT, an outgoing NAT, or both.
 
-    Map<CiscoIosNat, Transformation.Builder> convertedIncomingNats =
+    Map<CiscoIosNat, Transformation> convertedIncomingNats =
         incomingNats.stream()
             .map(
                 nat ->
@@ -2343,7 +2344,7 @@ public final class CiscoConfiguration extends VendorConfiguration {
           CiscoIosNatUtil.toIncomingTransformationChain(convertedIncomingNats));
     }
 
-    Map<CiscoIosNat, Transformation.Builder> convertedOutgoingNats =
+    Map<CiscoIosNat, Transformation> convertedOutgoingNats =
         outgoingNats.stream()
             .map(
                 nat ->

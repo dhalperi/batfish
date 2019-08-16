@@ -11,6 +11,7 @@ import org.batfish.datamodel.Prefix;
 import org.batfish.datamodel.acl.AclLineMatchExpr;
 import org.batfish.datamodel.acl.AclLineMatchExprs;
 import org.batfish.datamodel.acl.MatchSrcInterface;
+import org.batfish.datamodel.transformation.Branch;
 import org.batfish.datamodel.transformation.Transformation;
 import org.batfish.datamodel.transformation.TransformationStep;
 
@@ -61,7 +62,7 @@ public class CiscoIosStaticNat extends CiscoIosNat {
   }
 
   @Override
-  public Optional<Transformation.Builder> toOutgoingTransformation(
+  public Optional<Transformation> toOutgoingTransformation(
       Map<String, IpAccessList> ipAccessLists,
       Map<String, NatPool> natPools,
       @Nullable Set<String> insideInterfaces,
@@ -90,11 +91,11 @@ public class CiscoIosStaticNat extends CiscoIosNat {
       matchExpr = AclLineMatchExprs.and(matchExpr, new MatchSrcInterface(insideInterfaces));
     }
 
-    return Optional.of(Transformation.when(matchExpr).apply(step));
+    return Optional.of(Branch.when(matchExpr).apply(step).build());
   }
 
   @Override
-  public Optional<Transformation.Builder> toIncomingTransformation(
+  public Optional<Transformation> toIncomingTransformation(
       Map<String, IpAccessList> ipAccessLists, Map<String, NatPool> natPools) {
     /*
      * No named ACL in rule, but need to match src/dest to global/local according
@@ -115,6 +116,6 @@ public class CiscoIosStaticNat extends CiscoIosNat {
         return Optional.empty();
     }
 
-    return Optional.of(Transformation.when(matchExpr).apply(step));
+    return Optional.of(Branch.when(matchExpr).apply(step).build());
   }
 }

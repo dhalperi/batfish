@@ -13,6 +13,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import org.batfish.common.BatfishException;
+import org.batfish.datamodel.transformation.Composite;
 import org.batfish.datamodel.transformation.IpField;
 import org.batfish.datamodel.transformation.Transformation;
 import org.batfish.datamodel.transformation.Transformation.Builder;
@@ -41,27 +42,29 @@ final class CiscoIosNatUtil {
   }
 
   @Nonnull
-  static Transformation toOutgoingTransformationChain(Map<CiscoIosNat, Builder> convertedNats) {
+  static Transformation toOutgoingTransformationChain(
+      Map<CiscoIosNat, Transformation> convertedNats) {
     return toTransformationChain(convertedNats, true);
   }
 
   @Nonnull
   static Transformation toIncomingTransformationChain(
-      Map<CiscoIosNat, Transformation.Builder> convertedNats) {
+      Map<CiscoIosNat, Transformation> convertedNats) {
     return toTransformationChain(convertedNats, false);
   }
 
   @Nonnull
   private static Transformation toTransformationChain(
-      Map<CiscoIosNat, Transformation.Builder> convertedNats, boolean outgoing) {
+      Map<CiscoIosNat, Transformation> convertedNats, boolean outgoing) {
 
-    Map<IpField, List<Builder>> transformationsByField =
+    Map<IpField, Transformation> transformationsByField =
         convertedNats.keySet().stream()
-            .sorted()
             .collect(
                 Collectors.groupingBy(
                     nat -> nat.getAction().whatChanges(outgoing),
-                    Collectors.mapping(convertedNats::get, Collectors.toList())));
+                    Collectors.mapping(
+                        convertedNats::get,
+                        Collectors.collectingAndThen(Collectors.toList(), Composite::new))));
 
     if (!Sets.difference(
                 transformationsByField.keySet(),
@@ -80,8 +83,8 @@ final class CiscoIosNatUtil {
     * This is true so far for IOS NATs. ASA NATs can condition on both fields and modify both
     * fields, but that would be in a separate list.
     */
-    List<Transformation.Builder> source = transformationsByField.get(IpField.SOURCE);
-    List<Transformation.Builder> destination = transformationsByField.get(IpField.DESTINATION);
+    Transformation source = transformationsByField.get(IpField.SOURCE);
+    Transformation destination = transformationsByField.get(IpField.DESTINATION);
 
     // If there is only one field modified, chain all transformations with orElse
     Transformation onlyOrDestinationTransform = chain(firstNonNull(destination, source), null);

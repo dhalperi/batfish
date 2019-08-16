@@ -43,7 +43,7 @@ public abstract class CiscoIosNat implements Comparable<CiscoIosNat>, Serializab
    * @return A single {@link Transformation} for inside-to-outside, or nothing if the {@link
    *     Transformation} could not be built
    */
-  public abstract Optional<Transformation.Builder> toOutgoingTransformation(
+  public abstract Optional<Transformation> toOutgoingTransformation(
       Map<String, IpAccessList> ipAccessLists,
       Map<String, NatPool> natPools,
       Set<String> insideInterfaces,
@@ -57,7 +57,7 @@ public abstract class CiscoIosNat implements Comparable<CiscoIosNat>, Serializab
    * @return A single {@link Transformation} for inside-to-outside, or nothing if the {@link
    *     Transformation} could not be built
    */
-  public abstract Optional<Transformation.Builder> toIncomingTransformation(
+  public abstract Optional<Transformation> toIncomingTransformation(
       Map<String, IpAccessList> ipAccessLists, Map<String, NatPool> natPools);
 
   @Override

@@ -21,6 +21,7 @@ import org.batfish.datamodel.IpWildcard;
 import org.batfish.datamodel.Prefix;
 import org.batfish.datamodel.acl.AclLineMatchExpr;
 import org.batfish.datamodel.acl.MatchHeaderSpace;
+import org.batfish.datamodel.transformation.Branch;
 import org.batfish.datamodel.transformation.IpField;
 import org.batfish.datamodel.transformation.ShiftIpAddressIntoSubnet;
 import org.batfish.datamodel.transformation.Transformation;
@@ -33,7 +34,7 @@ final class CiscoAsaNatUtil {
   private CiscoAsaNatUtil() {}
 
   @Nullable
-  static Transformation.Builder dynamicTransformation(
+  static Transformation dynamicTransformation(
       AccessListAddressSpecifier realSource,
       AccessListAddressSpecifier mappedSource,
       String insideInterface,
@@ -74,8 +75,9 @@ final class CiscoAsaNatUtil {
     if (!insideInterface.equals(ANY_INTERFACE)) {
       matchExpr = and(matchExpr, matchSrcInterface(insideInterface));
     }
-    return Transformation.when(matchExpr)
-        .apply(assignSourceIp(mappedSourceObj.getStart(), mappedSourceObj.getEnd()));
+    return Branch.when(matchExpr)
+        .apply(assignSourceIp(mappedSourceObj.getStart(), mappedSourceObj.getEnd()))
+        .build();
   }
 
   private static Prefix getEqualLengthPrefix(WildcardAddressSpecifier specifier, Prefix prefix) {
@@ -173,7 +175,7 @@ final class CiscoAsaNatUtil {
     }
   }
 
-  static Optional<Transformation.Builder> secondTransformation(
+  static Optional<Transformation> secondTransformation(
       AccessListAddressSpecifier shiftDestination,
       AccessListAddressSpecifier matchDestination,
       Transformation first,
@@ -181,16 +183,15 @@ final class CiscoAsaNatUtil {
       IpField field,
       Warnings w) {
 
-    Transformation.Builder secondBuilder =
+    Transformation second =
         staticTransformation(
             matchDestination, shiftDestination, ANY_INTERFACE, networkObjects, field, w);
-    if (secondBuilder == null) {
+    if (second == null) {
       return Optional.empty();
     }
-    Transformation second = secondBuilder.build();
 
     return Optional.of(
-        Transformation.when(and(first.getGuard(), second.getGuard()))
+        Branch.when(and(first.getGuard(), second.getGuard()))
             .apply(
                 Iterables.concat(first.getTransformationSteps(), second.getTransformationSteps())));
   }
@@ -207,7 +208,7 @@ final class CiscoAsaNatUtil {
   }
 
   @Nullable
-  static Transformation.Builder staticTransformation(
+  static Transformation staticTransformation(
       AccessListAddressSpecifier matchAddress,
       AccessListAddressSpecifier shiftAddress,
       String insideInterface,
@@ -302,8 +303,7 @@ final class CiscoAsaNatUtil {
    * @return A single {@link Transformation} or null if empty
    */
   @Nullable
-  static Transformation toTransformationChain(
-      List<Optional<Transformation.Builder>> convertedNats) {
+  static Transformation toTransformationChain(List<Optional<Transformation>> convertedNats) {
 
     // Start at the end of the chain and go backwards.
     Transformation previous = null;

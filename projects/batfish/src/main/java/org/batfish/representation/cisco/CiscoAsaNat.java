@@ -245,7 +245,7 @@ public final class CiscoAsaNat implements Comparable<CiscoAsaNat>, Serializable 
   }
 
   @VisibleForTesting
-  public Optional<Transformation.Builder> toIncomingTransformation(
+  public Optional<Transformation> toIncomingTransformation(
       Map<String, NetworkObject> networkObjects, Warnings w) {
     return toTransformation(false, networkObjects, w);
   }
@@ -295,7 +295,7 @@ public final class CiscoAsaNat implements Comparable<CiscoAsaNat>, Serializable 
    * NAT is chosen, it is possible to match a source NAT and a destination NAT for the same packet.
    * Object NATs do not divert packets in reverse, only forward.
    */
-  private Optional<Transformation.Builder> toTransformation(
+  private Optional<Transformation> toTransformation(
       boolean outgoing, Map<String, NetworkObject> networkObjects, Warnings w) {
 
     if (!outgoing && _dynamic) {
@@ -342,7 +342,7 @@ public final class CiscoAsaNat implements Comparable<CiscoAsaNat>, Serializable 
      * translates to mappedSource. The reverse of this transformation is a destination
      * transformation which matches mappedSource and translates into realSource.
      */
-    Transformation.Builder firstTransformationBuilder =
+    Transformation firstTransformationBuilder =
         _dynamic
             ? dynamicTransformation(matchSrc, assignOrShiftSrc, insideInterface, networkObjects, w)
             : staticTransformation(
@@ -392,14 +392,14 @@ public final class CiscoAsaNat implements Comparable<CiscoAsaNat>, Serializable 
     return secondTransformation(
         shiftDestination,
         matchDestination,
-        firstTransformationBuilder.build(),
+        firstTransformationBuilder,
         networkObjects,
         secondField,
         w);
   }
 
   @VisibleForTesting
-  public Optional<Transformation.Builder> toOutgoingTransformation(
+  public Optional<Transformation> toOutgoingTransformation(
       Map<String, NetworkObject> networkObjects, Warnings w) {
     return toTransformation(true, networkObjects, w);
   }
