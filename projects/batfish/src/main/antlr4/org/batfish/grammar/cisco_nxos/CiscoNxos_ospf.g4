@@ -103,7 +103,8 @@ ro_auto_cost
 :
   AUTO_COST REFERENCE_BANDWIDTH
   (
-    bw = ospf_ref_bw_gbps (GBPS | MBPS)?
+    gbps = ospf_ref_bw_gbps GBPS
+    | mbps = ospf_ref_bw_mbps MBPS?
   ) NEWLINE
 ;
 

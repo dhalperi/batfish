@@ -2436,17 +2436,18 @@ public final class CiscoNxosControlPlaneExtractor extends CiscoNxosParserBaseLis
 
   @Override
   public void exitRo_auto_cost(Ro_auto_costContext ctx) {
-    if (ctx.GBPS() != null) {
+    if (ctx.gbps != null) {
       toIntegerInSpace(
               ctx,
-              ctx.bw,
+              ctx.gbps,
               OSPF_AUTO_COST_REFERENCE_BANDWIDTH_GBPS_RANGE,
               "router ospf auto-cost reference-bandwidth gbps")
           .ifPresent(gbps -> _currentOspfProcess.setAutoCostReferenceBandwidthMbps(gbps * 1000));
     } else {
+      assert ctx.mbps != null;
       toIntegerInSpace(
               ctx,
-              ctx.bw,
+              ctx.mbps,
               OSPF_AUTO_COST_REFERENCE_BANDWIDTH_MBPS_RANGE,
               "router ospf auto-cost reference-bandwidth mbps")
           .ifPresent(_currentOspfProcess::setAutoCostReferenceBandwidthMbps);
