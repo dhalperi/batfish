@@ -89,6 +89,7 @@ import org.batfish.datamodel.routing_policy.statement.Comment;
 import org.batfish.datamodel.routing_policy.statement.DeleteCommunity;
 import org.batfish.datamodel.routing_policy.statement.If;
 import org.batfish.datamodel.routing_policy.statement.PrependAsPath;
+import org.batfish.datamodel.routing_policy.statement.RemovePrivateAs;
 import org.batfish.datamodel.routing_policy.statement.RetainCommunity;
 import org.batfish.datamodel.routing_policy.statement.SetAdministrativeCost;
 import org.batfish.datamodel.routing_policy.statement.SetCommunity;
@@ -661,6 +662,12 @@ public final class CommunityStructuresVerifier {
     @Override
     public Void visitPrependAsPath(
         PrependAsPath prependAsPath, CommunityStructuresVerifierContext arg) {
+      return null;
+    }
+
+    @Override
+    public Void visitRemovePrivateAs(
+        RemovePrivateAs removePrivateAs, CommunityStructuresVerifierContext arg) {
       return null;
     }
 

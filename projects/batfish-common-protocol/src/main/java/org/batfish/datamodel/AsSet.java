@@ -15,6 +15,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.SortedSet;
+import java.util.stream.LongStream;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import org.apache.commons.lang3.StringUtils;
@@ -130,13 +131,15 @@ public class AsSet implements Serializable, Comparable<AsSet> {
         && _confederation == ((AsSet) o)._confederation;
   }
 
-  /** Expensive. */
+  public LongStream stream() {
+    return Arrays.stream(_value);
+  }
+
+  /** Expensive. Prefer {@link #stream()}. */
   @VisibleForTesting
   @JsonProperty(PROP_ASNS)
   public SortedSet<Long> getAsns() {
-    return Arrays.stream(_value)
-        .boxed()
-        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+    return stream().boxed().collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   @Override
