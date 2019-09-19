@@ -6,7 +6,6 @@ import static org.batfish.datamodel.Names.generatedBgpCommonExportPolicyName;
 import static org.batfish.datamodel.Names.generatedBgpDefaultRouteExportPolicyName;
 import static org.batfish.datamodel.Names.generatedBgpPeerEvpnExportPolicyName;
 import static org.batfish.datamodel.Names.generatedBgpPeerExportPolicyName;
-import static org.batfish.datamodel.routing_policy.statement.Statements.RemovePrivateAs;
 import static org.batfish.representation.cisco.CiscoConfiguration.MAX_ADMINISTRATIVE_COST;
 
 import com.google.common.collect.ImmutableList;
@@ -55,6 +54,10 @@ import org.batfish.datamodel.routing_policy.expr.LiteralOrigin;
 import org.batfish.datamodel.routing_policy.expr.MatchProtocol;
 import org.batfish.datamodel.routing_policy.expr.SelfNextHop;
 import org.batfish.datamodel.routing_policy.statement.If;
+import org.batfish.datamodel.routing_policy.statement.RemovePrivateAs;
+import org.batfish.datamodel.routing_policy.statement.RemovePrivateAs.How;
+import org.batfish.datamodel.routing_policy.statement.RemovePrivateAs.When;
+import org.batfish.datamodel.routing_policy.statement.RemovePrivateAs.Where;
 import org.batfish.datamodel.routing_policy.statement.SetNextHop;
 import org.batfish.datamodel.routing_policy.statement.SetOrigin;
 import org.batfish.datamodel.routing_policy.statement.Statement;
@@ -387,10 +390,16 @@ final class AristaConversions {
     if (firstNonNull(neighbor.getNextHopSelf(), Boolean.FALSE)) {
       exportStatements.add(new SetNextHop(SelfNextHop.getInstance()));
     }
-    if (firstNonNull(neighbor.getRemovePrivateAsMode(), RemovePrivateAsMode.NONE)
-        != RemovePrivateAsMode.NONE) {
-      // TODO(handle different types of RemovePrivateAs)
-      exportStatements.add(RemovePrivateAs.toStaticStatement());
+
+    // Remove private AS: https://www.arista.com/en/um-eos/eos-section-33-4-bgp-commands#ww1117427
+    RemovePrivateAsMode mode =
+        firstNonNull(neighbor.getRemovePrivateAsMode(), RemovePrivateAsMode.NONE);
+    if (mode == RemovePrivateAsMode.BASIC) {
+      exportStatements.add(new RemovePrivateAs(When.ONLY_IF_PUBLIC, How.REMOVE, Where.ALL));
+    } else if (mode == RemovePrivateAsMode.ALL) {
+      exportStatements.add(new RemovePrivateAs(When.ALWAYS, How.REMOVE, Where.ALL));
+    } else if (mode == RemovePrivateAsMode.REPLACE_AS) {
+      exportStatements.add(new RemovePrivateAs(When.ALWAYS, How.REPLACE_WITH_LOCAL_AS, Where.ALL));
     }
 
     // If defaultOriginate is set, generate route and default route export policy. Default route
