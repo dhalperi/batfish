@@ -8,7 +8,6 @@ import static org.batfish.datamodel.Names.generatedBgpDefaultRouteExportPolicyNa
 import static org.batfish.datamodel.Names.generatedBgpPeerEvpnExportPolicyName;
 import static org.batfish.datamodel.Names.generatedBgpPeerExportPolicyName;
 import static org.batfish.datamodel.Names.generatedBgpPeerImportPolicyName;
-import static org.batfish.datamodel.routing_policy.statement.Statements.RemovePrivateAs;
 import static org.batfish.representation.cisco_nxos.Vrf.MAC_VRF_OFFSET;
 
 import com.google.common.collect.ImmutableList;
@@ -63,12 +62,17 @@ import org.batfish.datamodel.routing_policy.expr.RemoteAs;
 import org.batfish.datamodel.routing_policy.expr.SelfNextHop;
 import org.batfish.datamodel.routing_policy.statement.CallStatement;
 import org.batfish.datamodel.routing_policy.statement.If;
+import org.batfish.datamodel.routing_policy.statement.RemovePrivateAs;
+import org.batfish.datamodel.routing_policy.statement.RemovePrivateAs.How;
+import org.batfish.datamodel.routing_policy.statement.RemovePrivateAs.When;
+import org.batfish.datamodel.routing_policy.statement.RemovePrivateAs.Where;
 import org.batfish.datamodel.routing_policy.statement.SetNextHop;
 import org.batfish.datamodel.routing_policy.statement.SetOrigin;
 import org.batfish.datamodel.routing_policy.statement.SetTag;
 import org.batfish.datamodel.routing_policy.statement.Statement;
 import org.batfish.datamodel.routing_policy.statement.Statements;
 import org.batfish.representation.cisco_nxos.BgpVrfL2VpnEvpnAddressFamilyConfiguration.RetainRouteType;
+import org.batfish.representation.cisco_nxos.BgpVrfNeighborConfiguration.RemovePrivateAsMode;
 
 /**
  * A utility class for converting between Cisco NX-OS configurations and the Batfish
@@ -713,8 +717,9 @@ final class Conversions {
       BgpVrfNeighborConfiguration neighbor) {
     ImmutableList.Builder<Statement> statementsBuilder = ImmutableList.builder();
 
-    if (neighbor.getRemovePrivateAs() != null) {
-      statementsBuilder.add(RemovePrivateAs.toStaticStatement());
+    RemovePrivateAs rpa = getRemovePrivateAs(neighbor.getRemovePrivateAs());
+    if (rpa != null) {
+      statementsBuilder.add(rpa);
     }
     // Peer-specific export policy
     Conjunction peerExportGuard = new Conjunction();
@@ -741,6 +746,17 @@ final class Conversions {
     return statementsBuilder.build();
   }
 
+  private static @Nullable RemovePrivateAs getRemovePrivateAs(@Nullable RemovePrivateAsMode mode) {
+    if (mode == RemovePrivateAsMode.BASE) {
+      return new RemovePrivateAs(When.ONLY_IF_NO_PUBLIC, How.REMOVE, Where.ALL);
+    } else if (mode == RemovePrivateAsMode.ALL) {
+      return new RemovePrivateAs(When.ALWAYS, How.REMOVE, Where.ALL);
+    } else if (mode == RemovePrivateAsMode.REPLACE_AS) {
+      return new RemovePrivateAs(When.ALWAYS, How.REPLACE_WITH_LOCAL_AS, Where.ALL);
+    }
+    return null;
+  }
+
   /** Get export statements for IPv4 address family */
   private static List<Statement> getExportStatementsForIpv4(
       Configuration configuration,
@@ -754,9 +770,10 @@ final class Conversions {
     if (firstNonNull(naf.getNextHopSelf(), Boolean.FALSE)) {
       statementsBuilder.add(new SetNextHop(SelfNextHop.getInstance()));
     }
-    if (neighbor.getRemovePrivateAs() != null) {
-      // TODO(handle different types of RemovePrivateAs)
-      statementsBuilder.add(RemovePrivateAs.toStaticStatement());
+
+    RemovePrivateAs rpa = getRemovePrivateAs(neighbor.getRemovePrivateAs());
+    if (rpa != null) {
+      statementsBuilder.add(rpa);
     }
 
     // If defaultOriginate is set, generate route and default route export policy. Default route

@@ -69291,6 +69291,12 @@
             "                    UINT8:'12')",
             "                  NEWLINE:'\\n')))",
             "            (rb_n_inner",
+            "              (rb_n_common",
+            "                (rb_n_remove_private_as",
+            "                  REMOVE_PRIVATE_AS:'remove-private-as'",
+            "                  REPLACE_AS:'replace-as'",
+            "                  NEWLINE:'\\n')))",
+            "            (rb_n_inner",
             "              (rb_n_address_family",
             "                ADDRESS_FAMILY:'address-family'",
             "                first = IPV4:'ipv4'",
@@ -82603,7 +82609,8 @@
                 31,
                 32,
                 33,
-                34
+                34,
+                35
               ],
               "numReferrers" : 1
             }
@@ -89379,7 +89386,7 @@
           "bgp template peer" : {
             "PEER_BLLF" : {
               "bgp neighbor inherit peer" : [
-                37
+                38
               ]
             }
           },
@@ -89441,12 +89448,12 @@
             },
             "EG_CCC" : {
               "bgp neighbor address-family route-map out" : [
-                32
+                33
               ]
             },
             "IN_BBB" : {
               "bgp neighbor address-family route-map in" : [
-                31
+                32
               ]
             }
           },
@@ -92582,12 +92589,12 @@
             },
             "EG_CCC" : {
               "bgp neighbor address-family route-map out" : [
-                32
+                33
               ]
             },
             "IN_BBB" : {
               "bgp neighbor address-family route-map in" : [
-                31
+                32
               ]
             }
           }

@@ -15,10 +15,12 @@ import org.batfish.common.Warnings;
 public class BgpVrfNeighborConfiguration implements Serializable {
 
   /**
-   * Determines whether to remote private AS numbers from AS paths ({@link #ALL}) or replace them
+   * Determines whether to remove private AS numbers from AS paths ({@link #ALL}) or replace them
    * with the local AS number ({@link #REPLACE_AS}).
    */
   public enum RemovePrivateAsMode {
+    NONE,
+    BASE,
     ALL,
     REPLACE_AS
   }

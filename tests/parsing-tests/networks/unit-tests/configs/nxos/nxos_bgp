@@ -26,6 +26,7 @@ router bgp 1
     remote-as 12345
     dynamic-capability
     timers 4 12
+    remove-private-as replace-as
     address-family ipv4 unicast
       next-hop-third-party
       route-map IN_BBB in

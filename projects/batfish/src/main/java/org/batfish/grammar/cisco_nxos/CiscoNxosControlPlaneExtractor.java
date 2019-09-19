@@ -3808,6 +3808,8 @@ public final class CiscoNxosControlPlaneExtractor extends CiscoNxosParserBaseLis
       _currentBgpVrfNeighbor.setRemovePrivateAs(RemovePrivateAsMode.ALL);
     } else if (ctx.REPLACE_AS() != null) {
       _currentBgpVrfNeighbor.setRemovePrivateAs(RemovePrivateAsMode.REPLACE_AS);
+    } else {
+      _currentBgpVrfNeighbor.setRemovePrivateAs(RemovePrivateAsMode.BASE);
     }
   }
 
