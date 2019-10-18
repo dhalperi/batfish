@@ -28,8 +28,11 @@ public final class RemovePrivateAs extends Statement {
     ALWAYS,
     /** Remove private AS numbers only if the AS-Path has no public ASNs. */
     ONLY_IF_NO_PUBLIC,
-    /** Remove private AS numbers only if the AS-Path has at least one public ASN. */
-    ONLY_IF_PUBLIC,
+    /**
+     * Remove private AS numbers only if the AS-Path with private ASNs removed would be non-empty
+     * after removal and propagation..
+     */
+    ONLY_IF_NON_EMPTY_AFTER,
   }
 
   public enum Where {
@@ -67,11 +70,11 @@ public final class RemovePrivateAs extends Statement {
   }
 
   @VisibleForTesting
-  AsPath applyTo(AsPath input, @Nullable AsSet localAs) {
-    assert _how != How.REPLACE_WITH_LOCAL_AS || localAs != null;
-
-    if (_when == When.ONLY_IF_PUBLIC) {
-      if (!inputPathContainsPublicAs(input)) {
+  AsPath applyTo(AsPath input, @Nonnull BgpSessionProperties props) {
+    if (_when == When.ONLY_IF_NON_EMPTY_AFTER) {
+      if (!props.isEbgp() && !inputPathContainsPublicAs(input)) {
+        // This is an IBGP session with only private ASNs. The resulting path would be empty, so
+        // leave unchanged.
         return input;
       }
     } else if (_when == When.ONLY_IF_NO_PUBLIC) {
@@ -93,7 +96,7 @@ public final class RemovePrivateAs extends Statement {
         }
         outputPath.add(set);
       } else if (_how == How.REPLACE_WITH_LOCAL_AS) {
-        outputPath.add(localAs);
+        outputPath.add(AsSet.of(props.getHeadAs()));
       }
       ++i;
     }
@@ -106,16 +109,17 @@ public final class RemovePrivateAs extends Statement {
     BgpSessionProperties props = environment.getBgpSessionProperties();
     checkState(props != null, "Expected BGP session properties");
     BgpRoute.Builder<?, ?> bgpRouteBuilder = (BgpRoute.Builder<?, ?>) environment.getOutputRoute();
-    AsSet localAs = null;
-    if (_how == How.REPLACE_WITH_LOCAL_AS) {
-      localAs = AsSet.of(props.getHeadAs());
+
+    if (props.getTailAs() == 300 || props.getHeadAs() == 300) {
+      System.err.println(
+          "Executing " + this + " on props " + props + " on route " + bgpRouteBuilder.build());
     }
 
-    AsPath newPath = applyTo(bgpRouteBuilder.getAsPath(), localAs);
+    AsPath newPath = applyTo(bgpRouteBuilder.getAsPath(), props);
     bgpRouteBuilder.setAsPath(newPath);
     if (environment.getWriteToIntermediateBgpAttributes()) {
       BgpRoute.Builder<?, ?> ir = environment.getIntermediateBgpAttributes();
-      ir.setAsPath(applyTo(ir.getAsPath(), localAs));
+      ir.setAsPath(applyTo(ir.getAsPath(), props));
     }
 
     Result result = new Result();

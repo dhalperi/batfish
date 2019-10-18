@@ -395,7 +395,8 @@ final class AristaConversions {
     RemovePrivateAsMode mode =
         firstNonNull(neighbor.getRemovePrivateAsMode(), RemovePrivateAsMode.NONE);
     if (mode == RemovePrivateAsMode.BASIC) {
-      exportStatements.add(new RemovePrivateAs(When.ONLY_IF_PUBLIC, How.REMOVE, Where.ALL));
+      exportStatements.add(
+          new RemovePrivateAs(When.ONLY_IF_NON_EMPTY_AFTER, How.REMOVE, Where.ALL));
     } else if (mode == RemovePrivateAsMode.ALL) {
       exportStatements.add(new RemovePrivateAs(When.ALWAYS, How.REMOVE, Where.ALL));
     } else if (mode == RemovePrivateAsMode.REPLACE_AS) {

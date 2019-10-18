@@ -70,7 +70,8 @@ public class RemovePrivateAsTest {
       assertThat(rpa.applyTo(publicInMiddle, null), equalTo(publicInMiddle));
     }
     {
-      RemovePrivateAs rpa = new RemovePrivateAs(When.ONLY_IF_PUBLIC, How.REMOVE, Where.ALL);
+      RemovePrivateAs rpa =
+          new RemovePrivateAs(When.ONLY_IF_NON_EMPTY_AFTER, How.REMOVE, Where.ALL);
       assertThat(rpa.applyTo(onlyPrivate, null), equalTo(onlyPrivate));
       assertThat(rpa.applyTo(publicInMiddle, null), equalTo(AsPath.ofSingletonAsSets(1L, 2L, 3L)));
     }

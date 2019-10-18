@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -534,5 +535,19 @@ public final class BgpSessionProperties {
     public int hashCode() {
       return Objects.hash(_additionalPaths, _advertiseExternal, _advertiseInactive);
     }
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("addressFamilies", _addressFamilies)
+        .add("tailAs", _tailAs)
+        .add("headAs", _headAs)
+        .add("tailIp", _tailIp)
+        .add("headIp", _headIp)
+        .add("sessionType", _sessionType)
+        .add("routeExchangeSettings", _routeExchangeSettings)
+        .add("confedSessionType", _confedSessionType)
+        .toString();
   }
 }
