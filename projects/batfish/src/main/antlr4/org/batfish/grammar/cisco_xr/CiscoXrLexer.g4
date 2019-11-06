@@ -1,7 +1,7 @@
 lexer grammar CiscoXrLexer;
 
 options {
-   superClass = 'org.batfish.grammar.cisco_xr.parsing.CiscoXrBaseLexer';
+   superClass = 'org.batfish.grammar.cisco.parsing.CiscoXrBaseLexer';
 }
 
 tokens {
@@ -17,6 +17,8 @@ tokens {
    ACL_NUM_PROTOCOL_TYPE_CODE,
    ACL_NUM_STANDARD,
    AS_PATH_SET_REGEX,
+   BANNER_DELIMITER_CADANT,
+   BANNER_DELIMITER_EOS,
    BANNER_DELIMITER_IOS,
    BANNER_BODY,
    COMMUNITY_LIST_NUM_EXPANDED,
@@ -24,6 +26,7 @@ tokens {
    COMMUNITY_SET_REGEX,
    CONFIG_SAVE,
    DSA1024,
+   END_CADANT,
    HEX_FRAGMENT,
    IS_LOCAL,
    ISO_ADDRESS,
@@ -8201,6 +8204,11 @@ NAMED_KEY
    'named-key'
 ;
 
+NAMEIF
+:
+   'nameif'
+;
+
 NAMESPACE
 :
    'namespace'
@@ -14629,6 +14637,8 @@ COMMENT_LINE
     ((java.util.function.Supplier<Boolean>)() -> {
       switch(lastTokenType()) {
         case -1:
+        case BANNER_DELIMITER_CADANT:
+        case BANNER_DELIMITER_EOS:
         case NEWLINE:
           return true;
         default:
@@ -15524,6 +15534,84 @@ M_AuthenticationUsernamePromptText_DOUBLE_QUOTE
    '"' -> type ( DOUBLE_QUOTE ) , popMode
 ;
 
+mode M_BannerAsa;
+// Initial whitespace character after banner type should have been consumed if present.
+// Further whitespace is part of body.
+
+M_BannerAsa_BANNER_BODY
+:
+  F_NonNewline+ -> type(BANNER_BODY)
+;
+
+M_BannerAsa_NEWLINE
+:
+  F_Newline+ -> type(NEWLINE), popMode
+;
+
+mode M_BannerCadant;
+
+M_BannerCadant_NEWLINE
+:
+  // Consume single newline. Subsequent newlines are part of banner.
+  F_Newline -> type(NEWLINE), mode(M_BannerCadantText)
+;
+
+M_BannerCadant_WS
+:
+  F_Whitespace+ -> channel(HIDDEN)
+;
+
+mode M_BannerCadantText;
+
+M_BannerCadant_BANNER_DELIMITER_CADANT
+:
+  '/end' F_Newline+ -> type(BANNER_DELIMITER_CADANT), popMode
+;
+
+M_BannerCadant_BODY
+:
+  F_NonNewline* F_Newline+
+  {
+    if (bannerCadantDelimiterFollows()) {
+      setType(BANNER_BODY);
+    } else {
+      more();
+    }
+  }
+;
+
+mode M_BannerEos;
+
+M_BannerEos_NEWLINE
+:
+  // Consume single newline. Subsequent newlines are part of banner.
+  F_Newline -> type(NEWLINE), mode(M_BannerEosText)
+;
+
+M_BannerEos_WS
+:
+  F_Whitespace+ -> channel(HIDDEN)
+;
+
+mode M_BannerEosText;
+
+M_BannerEos_BANNER_DELIMITER_EOS
+:
+  'EOF' F_Newline+ -> type(BANNER_DELIMITER_EOS), popMode
+;
+
+M_BannerEos_BODY
+:
+  F_NonNewline* F_Newline+
+  {
+    if (bannerEosDelimiterFollows()) {
+      setType(BANNER_BODY);
+    } else {
+      more();
+    }
+  }
+;
+
 mode M_BannerIosDelimiter;
 // whitespace should have been consumed before entering this mode
 
@@ -15578,6 +15666,28 @@ M_BannerIosCleanup_IGNORED
 M_BannerIosCleanup_NEWLINE
 :
   F_Newline+ -> type ( NEWLINE ) , popMode
+;
+
+mode M_CadantSshKey;
+
+M_CadantSshKey_END
+:
+   '/end' F_NonNewline* F_Newline -> type ( END_CADANT ) , popMode
+;
+
+M_CadantSshKey_LINE
+:
+   F_HexDigit+ F_Newline+
+;
+
+M_CadantSshKey_WS
+:
+   F_Whitespace+ -> channel ( HIDDEN )
+;
+
+M_CadantSshKey_NEWLINE
+:
+   F_Newline+ -> type ( NEWLINE )
 ;
 
 mode M_Certificate;
@@ -16214,6 +16324,11 @@ M_SnmpServerCommunity_CHAR
 ;
 
 mode M_SshKey;
+
+M_SshKey_DSA1024
+:
+   'dsa1024' -> type ( DSA1024 ), mode ( M_CadantSshKey )
+;
 
 M_SshKey_NEWLINE
 :

@@ -1,16 +1,42 @@
 parser grammar CiscoXrParser;
 
 import
-CiscoXr_common, CiscoXr_aaa, CiscoXr_acl, CiscoXr_bgp, CiscoXr_cable, CiscoXr_crypto, CiscoXr_callhome, CiscoXr_eigrp, CiscoXr_hsrp, CiscoXr_ignored, CiscoXr_interface, CiscoXr_isis, CiscoXr_line, CiscoXr_logging, CiscoXr_mpls, CiscoXr_ntp, CiscoXr_ospf, CiscoXr_pim, CiscoXr_qos, CiscoXr_rip, CiscoXr_routemap, CiscoXr_snmp, CiscoXr_static, CiscoXr_zone;
+CiscoXr_common, Arista_bgp, Arista_mlag, Arista_vlan, CiscoXr_aaa, CiscoXr_acl, CiscoXr_bgp, CiscoXr_cable, CiscoXr_crypto, CiscoXr_callhome, CiscoXr_eigrp, CiscoXr_hsrp, CiscoXr_ignored, CiscoXr_interface, CiscoXr_isis, CiscoXr_line, CiscoXr_logging, CiscoXr_mpls, CiscoXr_ntp, CiscoXr_ospf, CiscoXr_pim, CiscoXr_qos, CiscoXr_rip, CiscoXr_routemap, CiscoXr_snmp, CiscoXr_static, CiscoXr_zone;
 
 
 options {
-   superClass = 'org.batfish.grammar.cisco_xr.parsing.CiscoXrBaseParser';
+   superClass = 'org.batfish.grammar.cisco.parsing.CiscoXrBaseParser';
    tokenVocab = CiscoXrLexer;
 }
 
 @members {
+   private boolean _aristaBgp;
+
+   private boolean _eos;
+
+   private boolean _cadant;
+
    private boolean _multilineBgpNeighbors;
+
+   public boolean isAristaBgp() {
+      return _aristaBgp;
+   }
+
+   public boolean isEos() {
+      return _eos;
+   }
+
+   public void setAristaBgp(boolean b) {
+      _aristaBgp = b;
+   }
+
+   public void setEos(boolean b) {
+      _eos = b;
+   }
+
+   public void setCadant(boolean b) {
+      _cadant = b;
+   }
 
    public void setMultilineBgpNeighbors(boolean multilineBgpNeighbors) {
       _multilineBgpNeighbors = multilineBgpNeighbors;
@@ -18,8 +44,11 @@ options {
 
    @Override
    public String getStateInfo() {
-      return String.format("_multilineBgpNeighbors: %s",
-         _multilineBgpNeighbors
+      return String.format("_cadant: %s\n_multilineBgpNeighbors: %s\n_eos: %s\n, _aristaBgp: %s\n",
+         _cadant,
+         _multilineBgpNeighbors,
+         _eos,
+         _aristaBgp
       );
    }
 }
@@ -189,6 +218,72 @@ archive_null
       | PATH
       | WRITE_MEMORY
    ) null_rest_of_line
+;
+
+asa_comment_stanza
+:
+   COLON null_rest_of_line
+;
+
+asa_nat_ifaces
+:
+   PAREN_LEFT real_if = variable COMMA mapped_if = variable PAREN_RIGHT
+;
+
+asa_nat_optional_args
+:
+   DNS
+   | INACTIVE
+   | NO_PROXY_ARP
+   | ROUTE_LOOKUP
+   | UNIDIRECTIONAL
+;
+
+asa_nat_pat_pool
+:
+   PAT_POOL pat_obj = variable?
+   (
+       BLOCK_ALLOCATION
+       | EXTENDED
+       | (FLAT INCLUDE_RESERVE?)
+       | INTERFACE
+       | ROUND_ROBIN
+   )*
+;
+
+asa_twice_nat_destination
+:
+   DESTINATION STATIC
+   (
+      mapped_dst = variable
+      | mapped_dst_iface = INTERFACE
+   )
+   real_dst = variable
+;
+
+asa_twice_nat_dynamic
+:
+   DYNAMIC real_src = variable
+   (
+      (mapped_src = variable mapped_src_iface = INTERFACE?)
+      | mapped_src_iface = INTERFACE
+      | asa_nat_pat_pool
+   )
+;
+
+asa_twice_nat_service
+:
+   SERVICE svc_obj1 = variable svc_obj2 = variable
+;
+
+asa_twice_nat_static
+:
+   STATIC
+   real_src = variable
+   (
+      mapped_src = variable
+      | mapped_src_iface = INTERFACE
+   )
 ;
 
 av_null
@@ -1225,6 +1320,16 @@ ip_ssh_null
    ) null_rest_of_line
 ;
 
+ip_ssh_private_key
+:
+   PRIVATE_KEY ~END_CADANT+ END_CADANT
+;
+
+ip_ssh_public_key
+:
+   PUBLIC_KEY ~END_CADANT+ END_CADANT
+;
+
 ip_ssh_pubkey_chain
 :
    PUBKEY_CHAIN NEWLINE
@@ -2179,6 +2284,57 @@ s_authentication
    AUTHENTICATION null_rest_of_line
 ;
 
+s_asa_twice_nat
+:
+   NAT asa_nat_ifaces? AFTER_AUTO? SOURCE
+   (
+      asa_twice_nat_dynamic
+      | asa_twice_nat_static
+   )
+   asa_twice_nat_destination?
+   asa_twice_nat_service?
+   asa_nat_optional_args*
+   (
+      description_line
+      | NEWLINE
+   )
+;
+
+s_banner_asa
+:
+  banner_header = asa_banner_header body = BANNER_BODY? NEWLINE
+;
+
+asa_banner_header
+:
+  BANNER_ASDM_ASA
+  | BANNER_EXEC_ASA
+  | BANNER_LOGIN_ASA
+  | BANNER_MOTD_ASA
+;
+
+s_banner_cadant
+:
+  BANNER type = eos_banner_type NEWLINE body = BANNER_BODY? BANNER_DELIMITER_CADANT // delimiter includes newline
+;
+
+cadant_banner_type
+:
+  LOGIN
+  | MOTD
+;
+
+s_banner_eos
+:
+  BANNER type = eos_banner_type NEWLINE body = BANNER_BODY? BANNER_DELIMITER_EOS // delimiter includes newline
+;
+
+eos_banner_type
+:
+  LOGIN
+  | MOTD
+;
+
 s_banner_ios
 :
   banner_header = ios_banner_header banner = ios_delimited_banner NEWLINE
@@ -2787,6 +2943,11 @@ s_monitor_session
    )*
 ;
 
+s_mtu
+:
+   MTU iface = variable bytes = DEC NEWLINE
+;
+
 s_name
 :
    NAME variable variable null_rest_of_line
@@ -2810,6 +2971,11 @@ s_no_bfd
 s_no_enable
 :
    NO ENABLE PASSWORD (LEVEL level = DEC)? NEWLINE
+;
+
+s_no_vlan_eos
+:
+  (NO | DEFAULT) VLAN eos_vlan_id NEWLINE
 ;
 
 s_nv
@@ -2953,6 +3119,11 @@ s_service
 s_service_policy_global
 :
    SERVICE_POLICY name = variable GLOBAL NEWLINE
+;
+
+s_service_policy_interface
+:
+   SERVICE_POLICY name = variable INTERFACE iface = interface_name_unstructured NEWLINE
 ;
 
 s_sip_ua
@@ -3170,6 +3341,19 @@ s_vlan_cisco
    (
       vlan_vn_segment
       | vlan_null
+   )*
+;
+
+s_vlan_eos
+:
+   VLAN eos_vlan_id NEWLINE
+   (
+     eos_vlan_name
+     | eos_vlan_state
+     | eos_vlan_trunk
+     | eos_vlan_no_name
+     | eos_vlan_no_state
+     | eos_vlan_no_trunk
    )*
 ;
 
@@ -3503,6 +3687,8 @@ ssh_timeout
 stanza
 :
    appletalk_access_list_stanza
+   | asa_comment_stanza
+   | asa_access_group
    | as_path_set_stanza
    | community_set_stanza
    | del_stanza
@@ -3541,7 +3727,11 @@ stanza
    | s_application_var
    | s_archive
    | s_arp_access_list_extended
+   | s_asa_twice_nat
    | s_authentication
+   | s_banner_asa
+   | s_banner_cadant
+   | s_banner_eos
    | s_banner_ios
    | s_bfd
    | s_bfd_template
@@ -3573,6 +3763,7 @@ stanza
    | s_dspfarm
    | s_dynamic_access_policy_record
    | s_enable
+   | s_eos_mlag
    | s_ephone_dn_template
    | s_ethernet_services
    | s_event
@@ -3591,6 +3782,7 @@ stanza
    |
    // do not move below s_interface
    s_interface_line
+   | s_eos_vxlan_interface
    | s_interface
    | s_ip_access_list_eth
    | s_ip_access_list_session
@@ -3617,7 +3809,14 @@ stanza
    | s_l2tp_class
    | s_l2vpn
    | s_license
-   | s_line
+   |
+   {!_cadant}?
+
+   s_line
+   |
+   {_cadant}?
+
+   s_line_cadant
    | s_logging
    | s_lpts
    | s_management
@@ -3630,6 +3829,7 @@ stanza
    | s_mpls_label_range
    | s_mpls_ldp
    | s_mpls_traffic_eng
+   | s_mtu
    | s_name
    | s_netdestination
    | s_netdestination6
@@ -3638,6 +3838,8 @@ stanza
    | s_no_access_list_standard
    | s_no_bfd
    | s_no_enable
+   | { _eos }? s_no_vlan_internal_eos
+   | { _eos }? s_no_vlan_eos
    | s_ntp
    | s_null
    | s_nv
@@ -3667,6 +3869,7 @@ stanza
    | s_sccp
    | s_service
    | s_service_policy_global
+   | s_service_policy_interface
    | s_service_template
    | s_sip_ua
    | s_snmp_server
@@ -3689,8 +3892,10 @@ stanza
    | s_user_role
    | s_username
    | s_username_attributes
-   | s_vlan_cisco
-   | s_vlan_internal_cisco
+   | { !_eos && !isAsa() }? s_vlan_cisco
+   | { _eos }? s_vlan_eos
+   | { !_eos && !isAsa() }? s_vlan_internal_cisco
+   | { _eos }? s_vlan_internal_eos
    | s_vlan_name
    | s_voice
    | s_voice_card
@@ -3986,7 +4191,11 @@ u_password
          PASSWORD
          | SECRET
       )
-      up_cisco_xr
+      (
+         up_arista_md5
+         | up_arista_sha512
+         | up_cisco_xr
+      )
    )
    |
    (
@@ -4013,6 +4222,19 @@ ua_null
       GROUP_LOCK
       | VPN_GROUP_POLICY
    ) null_rest_of_line
+;
+
+up_arista_md5
+:
+   DEC
+   (
+      pass = MD5_ARISTA
+   )
+;
+
+up_arista_sha512
+:
+   SHA512 pass = SHA512_ARISTA
 ;
 
 up_cisco_xr

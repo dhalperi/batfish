@@ -1,8 +1,10 @@
 package org.batfish.representation.cisco_xr;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.Serializable;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -10,6 +12,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.ConcreteInterfaceAddress;
 import org.batfish.datamodel.ConfigurationFormat;
 import org.batfish.datamodel.IntegerSpace;
@@ -61,7 +64,7 @@ public class Interface implements Serializable {
 
   public static @Nullable Double getDefaultBandwidth(
       @Nonnull String name, @Nonnull ConfigurationFormat format) {
-    Double defaultSpeed = getDefaultSpeed(name);
+    Double defaultSpeed = getDefaultSpeed(name, format);
     if (defaultSpeed != null) {
       return defaultSpeed;
     } else if (name.startsWith("Bundle-Ethernet")) {
@@ -82,9 +85,43 @@ public class Interface implements Serializable {
     }
   }
 
-  public static @Nullable Double getDefaultSpeed(@Nonnull String name) {
+  public static @Nullable Double getDefaultSpeed(
+      @Nonnull String name, @Nonnull ConfigurationFormat format) {
     if (name.startsWith("Ethernet")) {
-      return DEFAULT_IOS_ETHERNET_SPEED;
+      switch (format) {
+        case ARISTA:
+          return DEFAULT_ARISTA_ETHERNET_SPEED;
+
+        case ALCATEL_AOS:
+        case ARUBAOS: // TODO: verify https://github.com/batfish/batfish/issues/1548
+        case CADANT:
+        case CISCO_ASA:
+        case CISCO_IOS:
+        case CISCO_IOS_XR:
+        case FORCE10:
+        case FOUNDRY:
+          return DEFAULT_IOS_ETHERNET_SPEED;
+
+        case AWS:
+        case BLADENETWORK:
+        case EMPTY:
+        case F5:
+        case FLAT_JUNIPER:
+        case FLAT_VYOS:
+        case HOST:
+        case IGNORED:
+        case IPTABLES:
+        case JUNIPER:
+        case JUNIPER_SWITCH:
+        case MRV:
+        case MRV_COMMANDS:
+        case MSS:
+        case UNKNOWN:
+        case VXWORKS:
+        case VYOS:
+        default:
+          throw new BatfishException("Unuspported format: " + format);
+      }
     } else if (name.startsWith("FastEthernet")) {
       return DEFAULT_FAST_ETHERNET_SPEED;
     } else if (name.startsWith("GigabitEthernet")) {
@@ -117,6 +154,8 @@ public class Interface implements Serializable {
   private String _alias;
 
   @Nullable private IntegerSpace _allowedVlans;
+
+  private List<AristaDynamicSourceNat> _aristaNats;
 
   private boolean _autoState;
 
@@ -197,6 +236,8 @@ public class Interface implements Serializable {
 
   private Tunnel _tunnel;
 
+  @Nonnull private Set<String> _vlanTrunkGroups;
+
   private String _vrf;
 
   private SortedSet<String> _declaredNames;
@@ -264,10 +305,46 @@ public class Interface implements Serializable {
     _secondaryAddresses = new LinkedHashSet<>();
     ConfigurationFormat vendor = c.getVendor();
 
+    // Proxy-ARP defaults
+    switch (vendor) {
+      case CISCO_ASA:
+      case CISCO_IOS:
+        setProxyArp(true);
+        break;
+
+        // $CASES-OMITTED$
+      default:
+        break;
+    }
+
     // Switchport defaults
-    _switchportMode = SwitchportMode.NONE;
-    _switchport = false;
+    if (vendor == ConfigurationFormat.ARISTA
+        && (name.startsWith("Ethernet") || name.startsWith("Port-Channel"))) {
+      SwitchportMode defaultSwitchportMode = c.getCf().getDefaultSwitchportMode();
+      if (defaultSwitchportMode == null) {
+        // Arista Ethernet and Port-channel default switchport mode is ACCESS
+        _switchportMode = SwitchportMode.ACCESS;
+      } else {
+        // Arista use alternate default switchport mode if declared
+        _switchportMode = defaultSwitchportMode;
+      }
+    } else {
+      // Default switchport mode for non-Arista and Arista non-Ethernet/Port-Channel is NONE
+      _switchportMode = SwitchportMode.NONE;
+    }
+    _switchport = _switchportMode != SwitchportMode.NONE;
+    if (_switchportMode == SwitchportMode.TRUNK) {
+      _allowedVlans = ALL_VLANS;
+    } else if (_switchportMode == SwitchportMode.ACCESS) {
+      _allowedVlans = null;
+    }
+    _vlanTrunkGroups = ImmutableSet.of();
     _spanningTreePortfast = c.getSpanningTreePortfastDefault();
+  }
+
+  public void addVlanTrunkGroup(@Nonnull String groupName) {
+    _vlanTrunkGroups =
+        ImmutableSet.<String>builder().addAll(_vlanTrunkGroups).add(groupName).build();
   }
 
   public void setAllowedVlans(@Nullable IntegerSpace allowedVlans) {
@@ -299,6 +376,10 @@ public class Interface implements Serializable {
     }
     allAddresses.addAll(_secondaryAddresses);
     return allAddresses;
+  }
+
+  public List<AristaDynamicSourceNat> getAristaNats() {
+    return _aristaNats;
   }
 
   public boolean getAutoState() {
@@ -482,6 +563,15 @@ public class Interface implements Serializable {
     return _securityLevel;
   }
 
+  /**
+   * Retun the (immutable) set of VLAN trunk groups that this interface belongs to. To add trunk
+   * groups, see {@link #addVlanTrunkGroup(String)}
+   */
+  @Nonnull
+  public Set<String> getVlanTrunkGroups() {
+    return _vlanTrunkGroups;
+  }
+
   public String getVrf() {
     return _vrf;
   }
@@ -496,6 +586,10 @@ public class Interface implements Serializable {
 
   public void setAlias(String alias) {
     _alias = alias;
+  }
+
+  public void setAristaNats(List<AristaDynamicSourceNat> aristaNats) {
+    _aristaNats = aristaNats;
   }
 
   public void setAutoState(boolean autoState) {

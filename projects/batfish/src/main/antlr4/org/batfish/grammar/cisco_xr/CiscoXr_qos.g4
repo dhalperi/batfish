@@ -6,6 +6,11 @@ options {
    tokenVocab = CiscoXrLexer;
 }
 
+asa_object_nat_service
+:
+   SERVICE (SCTP | TCP | UDP) real_port = port mapped_port = port
+;
+
 cm_end_class_map
 :
    END_CLASS_MAP NEWLINE
@@ -271,6 +276,7 @@ o_network
       on_description
       | on_fqdn
       | on_host
+      | on_nat
       | on_range
       | on_subnet
    )*
@@ -610,6 +616,15 @@ on_host
    ) NEWLINE
 ;
 
+on_nat
+:
+   NAT asa_nat_ifaces?
+   (
+      onn_dynamic
+      | onn_static
+   ) NEWLINE
+;
+
 on_range
 :
    RANGE start = IP_ADDRESS end = IP_ADDRESS NEWLINE
@@ -629,6 +644,34 @@ on_subnet
 on_group
 :
    GROUP_OBJECT name = variable_permissive NEWLINE
+;
+
+onn_dynamic
+:
+   DYNAMIC
+   (
+      (
+         (
+            mapped_iface = INTERFACE
+            | host_ip = IP_ADDRESS
+            | obj = variable
+         )
+         mapped_iface_after = INTERFACE?
+      )
+      | asa_nat_pat_pool
+   ) DNS?
+;
+
+onn_static
+:
+   STATIC
+   (
+      INTERFACE
+      | host_ip = IP_ADDRESS
+      | obj = variable
+   )
+   asa_nat_optional_args*
+   asa_object_nat_service?
 ;
 
 os_description

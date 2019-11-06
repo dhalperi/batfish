@@ -363,8 +363,19 @@ extended_access_list_tail
    )?
    (
       prot = protocol
-      | OBJECT_GROUP ogs = variable
-      | OBJECT variable
+      |
+      (
+         OBJECT_GROUP ogs = variable
+      )
+      |
+      (
+         OBJECT
+         (
+            inline_obj = protocol
+            | inline_obj_icmp = icmp_inline_object_type
+            | obj = variable
+         )
+      )
    ) srcipr = access_list_ip_range
    (
       alps_src = port_specifier
