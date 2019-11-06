@@ -1,4 +1,4 @@
-package org.batfish.grammar.cisco.parsing;
+package org.batfish.grammar.cisco_xr.parsing;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -14,7 +14,7 @@ public abstract class CiscoXrBaseParser extends BatfishParser {
   /** Returns {@code true} iff {@code t}'s text represents a valid vlan ID (1-4094) in base 10. */
   protected static boolean isVlanId(Token t) {
     try {
-      Integer val = Integer.parseInt(t.getText(), 10);
+      int val = Integer.parseInt(t.getText(), 10);
       checkArgument(1 <= val && val <= 4094);
     } catch (IllegalArgumentException e) {
       return false;
@@ -22,17 +22,7 @@ public abstract class CiscoXrBaseParser extends BatfishParser {
     return true;
   }
 
-  private boolean _asa;
-
   public CiscoXrBaseParser(TokenStream input) {
     super(input);
-  }
-
-  protected boolean isAsa() {
-    return _asa;
-  }
-
-  public void setAsa(boolean asa) {
-    _asa = asa;
   }
 }

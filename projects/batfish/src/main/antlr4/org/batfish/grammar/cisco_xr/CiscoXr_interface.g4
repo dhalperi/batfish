@@ -6,75 +6,6 @@ options {
    tokenVocab = CiscoXrLexer;
 }
 
-eos_bandwidth_specifier
-:
-   FORTYG_FULL
-   | ONE_HUNDREDG_FULL
-   | TEN_THOUSAND_FULL
-   | ONE_HUNDRED_FULL
-   | ONE_THOUSAND_FULL
-;
-
-eos_vxlan_if_inner
-:
-   (
-      VXLAN
-      (
-         eos_vxif_vxlan_flood
-         | eos_vxif_vxlan_multicast_group
-         | eos_vxif_vxlan_source_interface
-         | eos_vxif_vxlan_udp_port
-         | eos_vxif_vxlan_vlan
-         | eos_vxif_vxlan_vrf
-      )
-   )
-   | eos_vxif_description
-;
-
-eos_vxif_description
-:
-   description_line
-;
-
-eos_vxif_vxlan_flood
-:
-   FLOOD VTEP (ADD | REMOVE)? (hosts += IP_ADDRESS)+ NEWLINE
-;
-
-eos_vxif_vxlan_multicast_group
-:
-   MULTICAST_GROUP group = IP_ADDRESS NEWLINE
-;
-
-eos_vxif_vxlan_source_interface
-:
-   SOURCE_INTERFACE iface = interface_name NEWLINE
-;
-
-eos_vxif_vxlan_udp_port
-:
-   UDP_PORT num = DEC NEWLINE
-;
-
-eos_vxif_vxlan_vlan
-:
-   VLAN num = DEC
-   (
-      eos_vxif_vxlan_flood
-      | eos_vxif_vxlan_vlan_vni
-   )
-;
-
-eos_vxif_vxlan_vlan_vni
-:
-   VNI num = DEC NEWLINE
-;
-
-eos_vxif_vxlan_vrf
-:
-   VRF vrf = VARIABLE VNI vni = DEC NEWLINE
-;
-
 if_autostate
 :
    NO? AUTOSTATE NEWLINE
@@ -376,12 +307,6 @@ if_ip_igmp
    )
 ;
 
-if_ip_nat_destination
-:
-   IP NAT DESTINATION STATIC IP_ADDRESS ACCESS_LIST acl = variable IP_ADDRESS
-   NEWLINE
-;
-
 if_ip_nat_inside
 :
    IP NAT INSIDE NEWLINE
@@ -390,15 +315,6 @@ if_ip_nat_inside
 if_ip_nat_outside
 :
    IP NAT OUTSIDE NEWLINE
-;
-
-if_ip_nat_source
-:
-   IP NAT SOURCE DYNAMIC ACCESS_LIST acl = variable
-   (
-     OVERLOAD
-     | POOL pool = variable
-   ) NEWLINE
 ;
 
 if_ip_nbar
@@ -663,19 +579,9 @@ if_load_interval
    LOAD_INTERVAL li = DEC NEWLINE
 ;
 
-if_eos_mlag
-:
-   MLAG id = DEC NEWLINE
-;
-
 if_mtu
 :
    MTU mtu_size = DEC NEWLINE
-;
-
-if_nameif
-:
-   NAMEIF name = variable NEWLINE
 ;
 
 if_no_bfd
@@ -695,11 +601,6 @@ if_no_bfd
 if_no_ip_address
 :
    NO IP ADDRESS NEWLINE
-;
-
-if_no_nameif
-:
-   NO NAMEIF NEWLINE
 ;
 
 if_no_routing_dynamic
@@ -1181,15 +1082,6 @@ if_speed_auto
    SPEED AUTO NEWLINE
 ;
 
-if_speed_eos
-:
-   SPEED
-   (
-      AUTO
-      | FORCED
-   )? eos_bandwidth_specifier NEWLINE
-;
-
 if_speed_ios
 :
    SPEED mbits = DEC NEWLINE
@@ -1466,11 +1358,6 @@ if_switchport_trunk_encapsulation
    SWITCHPORT TRUNK ENCAPSULATION e = switchport_trunk_encapsulation NEWLINE
 ;
 
-if_switchport_trunk_group_eos
-:
-   SWITCHPORT TRUNK GROUP name = variable NEWLINE
-;
-
 if_switchport_trunk_native
 :
    SWITCHPORT TRUNK NATIVE VLAN vlan = DEC NEWLINE
@@ -1743,12 +1630,6 @@ ifvrrp_priority
    PRIORITY priority = DEC NEWLINE
 ;
 
-s_eos_vxlan_interface
-:
-   INTERFACE iname = eos_vxlan_interface_name NEWLINE
-   eos_vxlan_if_inner*
-;
-
 s_interface
 :
    INTERFACE PRECONFIGURE? iname = interface_name
@@ -1757,13 +1638,7 @@ s_interface
       | MULTIPOINT
       | POINT_TO_POINT
    )?
-   (
-      NEWLINE
-      |
-      {_cadant}?
-
-      NEWLINE?
-   )
+   NEWLINE
    if_inner*
 ;
 
@@ -1777,7 +1652,6 @@ if_inner
    | if_default_gw
    | if_delay
    | if_description
-   | if_eos_mlag
    | if_flow_sampler
    | if_hsrp
    | if_hsrp6
@@ -1796,10 +1670,8 @@ if_inner
    | if_ip_hold_time
    | if_ip_inband_access_group
    | if_ip_igmp
-   | if_ip_nat_destination
    | if_ip_nat_inside
    | if_ip_nat_outside
-   | if_ip_nat_source
    | if_ip_nbar
    | if_ip_ospf_area
    | if_ip_ospf_cost
@@ -1834,10 +1706,8 @@ if_inner
    | if_isis_tag
    | if_load_interval
    | if_mtu
-   | if_nameif
    | if_no_bfd
    | if_no_ip_address
-   | if_no_nameif
    | if_no_routing_dynamic
    | if_no_security_level
    | if_port_security
@@ -1848,7 +1718,6 @@ if_inner
    | if_shutdown
    | if_spanning_tree
    | if_speed_auto
-   | if_speed_eos
    | if_speed_ios
    | if_speed_ios_dot11radio
    | if_standby
@@ -1860,7 +1729,6 @@ if_inner
    | if_switchport_private_vlan_mapping
    | if_switchport_trunk_allowed
    | if_switchport_trunk_encapsulation
-   | if_switchport_trunk_group_eos
    | if_switchport_trunk_native
    | if_tunnel
    | if_vlan
