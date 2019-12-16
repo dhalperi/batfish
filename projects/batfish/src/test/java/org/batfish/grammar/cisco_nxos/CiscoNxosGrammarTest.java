@@ -1252,6 +1252,18 @@ public final class CiscoNxosGrammarTest {
   }
 
   @Test
+  public void testTunnelExtraction() {
+    // TODO: make into extraction test
+    assertThat(parseVendorConfig("nxos_tunnel"), notNullValue());
+  }
+
+  @Test
+  public void testTunnelConversion() throws IOException {
+    // TODO: make into conversion test
+    assertThat(parseConfig("nxos_tunnel"), notNullValue());
+  }
+
+  @Test
   public void testEigrpExtraction() {
     String hostname = "nxos_eigrp";
     CiscoNxosConfiguration c = parseVendorConfig(hostname);
