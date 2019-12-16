@@ -57,6 +57,7 @@ s_interface_regular
     | i_shutdown
     | i_speed
     | i_switchport
+    | i_tunnel
     | i_vrf_member
   )*
 ;
@@ -1225,6 +1226,31 @@ i_switchport_trunk_allowed
 i_switchport_trunk_native
 :
   NATIVE VLAN vlan = unreserved_vlan_id NEWLINE
+;
+
+i_tunnel
+:
+  TUNNEL
+  (
+    i_tunnel_destination
+    | i_tunnel_mode
+    | i_tunnel_source
+  )
+;
+
+i_tunnel_destination
+:
+  DESTINATION ip_address NEWLINE
+;
+
+i_tunnel_mode
+:
+  MODE GRE NEWLINE
+;
+
+i_tunnel_source
+:
+  SOURCE source = interface_name NEWLINE
 ;
 
 i_vrf_member

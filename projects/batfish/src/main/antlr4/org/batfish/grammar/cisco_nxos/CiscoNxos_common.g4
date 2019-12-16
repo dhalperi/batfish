@@ -116,6 +116,7 @@ interface_prefix
   | LOOPBACK
   | MGMT
   | PORT_CHANNEL
+  | TUNNEL
   | VLAN
 ;
 

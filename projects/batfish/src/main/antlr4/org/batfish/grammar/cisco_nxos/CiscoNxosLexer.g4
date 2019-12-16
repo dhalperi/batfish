@@ -4523,6 +4523,11 @@ TTL_FAILURE
   'ttl-failure'
 ;
 
+TUNNEL
+:
+  [tT] [uU] [nN] [nN] [eE] [lL]
+;
+
 TX
 :
   'tx'
