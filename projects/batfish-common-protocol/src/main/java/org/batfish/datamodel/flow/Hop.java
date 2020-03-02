@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
@@ -62,5 +63,10 @@ public final class Hop {
   @Override
   public int hashCode() {
     return Objects.hash(_node, _steps);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("node", _node).add("steps", _steps).toString();
   }
 }

@@ -6,7 +6,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.batfish.datamodel.flow.InboundStep.InboundStepDetail;
 
@@ -18,21 +17,20 @@ public final class InboundStep extends Step<InboundStepDetail> {
   public static class InboundStepDetail {
     private static final String PROP_INTERFACE = "interface";
 
-    @Nonnull private final String _interface;
+    @Nullable private final String _interface;
 
-    public InboundStepDetail(@Nonnull String iface) {
+    public InboundStepDetail(@Nullable String iface) {
       _interface = iface;
     }
 
     @JsonCreator
     private static InboundStepDetail jsonCreator(
         @JsonProperty(PROP_INTERFACE) @Nullable String iface) {
-      checkArgument(iface != null, "Missing %s", PROP_INTERFACE);
       return new InboundStepDetail(iface);
     }
 
     @JsonProperty
-    @Nonnull
+    @Nullable
     public String getInterface() {
       return _interface;
     }

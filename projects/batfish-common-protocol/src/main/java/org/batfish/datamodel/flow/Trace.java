@@ -6,6 +6,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.util.List;
@@ -65,6 +66,14 @@ public final class Trace {
   @Override
   public int hashCode() {
     return Objects.hash(_hops, _disposition.ordinal());
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("disposition", _disposition)
+        .add("hops", _hops)
+        .toString();
   }
 
   /**

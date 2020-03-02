@@ -668,6 +668,7 @@ public class Batfish extends PluginConsumer implements IBatfish {
       }
     } catch (Exception e) {
       exception = new BatfishException("Failed to answer question", e);
+      exception.printStackTrace();
     }
 
     Answer answer = new Answer();

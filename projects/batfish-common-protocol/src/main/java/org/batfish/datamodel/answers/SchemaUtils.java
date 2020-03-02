@@ -86,6 +86,7 @@ public final class SchemaUtils {
     try {
       convertType(jsonNode, schema);
     } catch (ClassCastException e) {
+      e.printStackTrace();
       return false;
     }
     return true;
