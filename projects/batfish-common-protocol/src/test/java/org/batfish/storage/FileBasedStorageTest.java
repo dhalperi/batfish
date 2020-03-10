@@ -46,7 +46,6 @@ import org.batfish.common.topology.Layer1Topology;
 import org.batfish.common.topology.Layer2Topology;
 import org.batfish.common.util.BatfishObjectMapper;
 import org.batfish.common.util.CommonUtil;
-import org.batfish.common.util.UnzipUtility;
 import org.batfish.datamodel.Configuration;
 import org.batfish.datamodel.ConfigurationFormat;
 import org.batfish.datamodel.Ip;
@@ -351,28 +350,8 @@ public final class FileBasedStorageTest {
     testdir.toFile().mkdirs();
     Files.write(testdir.resolve("testfile"), testSting.getBytes());
 
-    Path tmpzip = _folder.getRoot().toPath().resolve("tmp.zip");
-    try (InputStream inputStream = _storage.loadSnapshotInputObject(network, snapshot, "testkey")) {
-      FileUtils.copyInputStreamToFile(inputStream, tmpzip.toFile());
-    }
-
-    Path unzipDir = _folder.getRoot().toPath().resolve("tmp");
-    UnzipUtility.unzip(tmpzip, unzipDir);
-
-    // the top level entry in the zip should be testkey
-    String[] toplevel = unzipDir.toFile().list();
-    assertThat(toplevel, equalTo(new String[] {"testkey"}));
-
-    // then, there should be testfile
-    String[] secondlevel = unzipDir.resolve(toplevel[0]).toFile().list();
-    assertThat(secondlevel, equalTo(new String[] {"testfile"}));
-
-    // the content of the testfile should match what we wrote
-    assertThat(
-        new String(
-            Files.readAllBytes(unzipDir.resolve(toplevel[0]).resolve(secondlevel[0])),
-            StandardCharsets.UTF_8),
-        equalTo(testSting));
+    _thrown.expectMessage("Can not read a directory directly");
+    _storage.loadSnapshotInputObject(network, snapshot, "testkey");
   }
 
   @Test
