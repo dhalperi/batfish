@@ -28,6 +28,9 @@ maven_install(
     repositories = [
         "https://repo1.maven.org/maven2",
     ],
+    override_targets = {
+            "org.antlr:antlr4-runtime": "@//projects/lib/antlr4:antlr4_runtime",
+    },
     strict_visibility = True,
 )
 
