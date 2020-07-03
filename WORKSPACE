@@ -41,6 +41,6 @@ pinned_maven_install()
 # ANTLR4 tool
 http_jar(
     name = "antlr4_tool",
-    sha256 = "6852386d7975eff29171dae002cc223251510d35f291ae277948f381a7b380b4",
-    url = "https://search.maven.org/remotecontent?filepath=org/antlr/antlr4/4.7.2/antlr4-4.7.2-complete.jar",
+    sha256 = "01b56768c4a48d8cd2034560f6ab481699b23dafc618110ec46e12a72a536c1b",
+    url = "https://search.maven.org/remotecontent?filepath=org/antlr/antlr4/4.8-1/antlr4-4.8-1-complete.jar",
 )

@@ -1883,7 +1883,6 @@
                 "coord": "net.sourceforge.pmd:pmd-core:6.23.0",
                 "file": "v1/https/repo1.maven.org/maven2/net/sourceforge/pmd/pmd-core/6.23.0/pmd-core-6.23.0.jar",
                 "directDependencies": [
-                    "org.antlr:antlr4-runtime:4.7.2",
                     "commons-io:commons-io:2.6",
                     "org.ow2.asm:asm:7.3.1",
                     "net.sourceforge.saxon:saxon:9.1.0.8",
@@ -1891,10 +1890,10 @@
                     "net.sourceforge.saxon:saxon:jar:dom:9.1.0.8",
                     "net.java.dev.javacc:javacc:5.0",
                     "org.apache.commons:commons-lang3:3.9",
+                    "org.antlr:antlr4-runtime:4.8-1",
                     "com.beust:jcommander:1.72"
                 ],
                 "dependencies": [
-                    "org.antlr:antlr4-runtime:4.7.2",
                     "commons-io:commons-io:2.6",
                     "org.ow2.asm:asm:7.3.1",
                     "net.sourceforge.saxon:saxon:9.1.0.8",
@@ -1902,6 +1901,7 @@
                     "net.sourceforge.saxon:saxon:jar:dom:9.1.0.8",
                     "net.java.dev.javacc:javacc:5.0",
                     "org.apache.commons:commons-lang3:3.9",
+                    "org.antlr:antlr4-runtime:4.8-1",
                     "com.beust:jcommander:1.72"
                 ],
                 "exclusions": [
@@ -1918,22 +1918,22 @@
                 "file": "v1/https/repo1.maven.org/maven2/net/sourceforge/pmd/pmd-core/6.23.0/pmd-core-6.23.0-sources.jar",
                 "directDependencies": [
                     "net.java.dev.javacc:javacc:jar:sources:5.0",
-                    "org.antlr:antlr4-runtime:jar:sources:4.7.2",
                     "org.apache.commons:commons-lang3:jar:sources:3.9",
                     "org.ow2.asm:asm:jar:sources:7.3.1",
                     "commons-io:commons-io:jar:sources:2.6",
                     "net.sourceforge.saxon:saxon:jar:sources:9.1.0.8",
                     "com.google.code.gson:gson:jar:sources:2.8.6",
+                    "org.antlr:antlr4-runtime:jar:sources:4.8-1",
                     "com.beust:jcommander:jar:sources:1.72"
                 ],
                 "dependencies": [
                     "net.java.dev.javacc:javacc:jar:sources:5.0",
-                    "org.antlr:antlr4-runtime:jar:sources:4.7.2",
                     "org.apache.commons:commons-lang3:jar:sources:3.9",
                     "org.ow2.asm:asm:jar:sources:7.3.1",
                     "commons-io:commons-io:jar:sources:2.6",
                     "net.sourceforge.saxon:saxon:jar:sources:9.1.0.8",
                     "com.google.code.gson:gson:jar:sources:2.8.6",
+                    "org.antlr:antlr4-runtime:jar:sources:4.8-1",
                     "com.beust:jcommander:jar:sources:1.72"
                 ],
                 "exclusions": [
@@ -1958,7 +1958,6 @@
                     "org.apache.commons:commons-lang3:3.9"
                 ],
                 "dependencies": [
-                    "org.antlr:antlr4-runtime:4.7.2",
                     "commons-io:commons-io:2.6",
                     "org.ow2.asm:asm:7.3.1",
                     "net.sourceforge.saxon:saxon:9.1.0.8",
@@ -1967,6 +1966,7 @@
                     "net.sourceforge.saxon:saxon:jar:dom:9.1.0.8",
                     "net.java.dev.javacc:javacc:5.0",
                     "org.apache.commons:commons-lang3:3.9",
+                    "org.antlr:antlr4-runtime:4.8-1",
                     "com.beust:jcommander:1.72"
                 ],
                 "exclusions": [
@@ -1991,13 +1991,13 @@
                 ],
                 "dependencies": [
                     "net.java.dev.javacc:javacc:jar:sources:5.0",
-                    "org.antlr:antlr4-runtime:jar:sources:4.7.2",
                     "org.apache.commons:commons-lang3:jar:sources:3.9",
                     "org.ow2.asm:asm:jar:sources:7.3.1",
                     "commons-io:commons-io:jar:sources:2.6",
                     "net.sourceforge.saxon:saxon:jar:sources:9.1.0.8",
                     "net.sourceforge.pmd:pmd-core:jar:sources:6.23.0",
                     "com.google.code.gson:gson:jar:sources:2.8.6",
+                    "org.antlr:antlr4-runtime:jar:sources:4.8-1",
                     "com.beust:jcommander:jar:sources:1.72"
                 ],
                 "exclusions": [
@@ -2052,32 +2052,32 @@
                 "sha256": "5849b97f0114447ad1e4f02ca1f55dd103dd2ddece7c7e4bb3781c46d0c674f4"
             },
             {
-                "coord": "org.antlr:antlr4-runtime:4.7.2",
-                "file": "v1/https/repo1.maven.org/maven2/org/antlr/antlr4-runtime/4.7.2/antlr4-runtime-4.7.2.jar",
+                "coord": "org.antlr:antlr4-runtime:4.8-1",
+                "file": "v1/https/repo1.maven.org/maven2/org/antlr/antlr4-runtime/4.8-1/antlr4-runtime-4.8-1.jar",
                 "directDependencies": [],
                 "dependencies": [],
                 "exclusions": [
                     "org.hamcrest:hamcrest-core"
                 ],
-                "url": "https://repo1.maven.org/maven2/org/antlr/antlr4-runtime/4.7.2/antlr4-runtime-4.7.2.jar",
+                "url": "https://repo1.maven.org/maven2/org/antlr/antlr4-runtime/4.8-1/antlr4-runtime-4.8-1.jar",
                 "mirror_urls": [
-                    "https://repo1.maven.org/maven2/org/antlr/antlr4-runtime/4.7.2/antlr4-runtime-4.7.2.jar"
+                    "https://repo1.maven.org/maven2/org/antlr/antlr4-runtime/4.8-1/antlr4-runtime-4.8-1.jar"
                 ],
-                "sha256": "4c518b87d4bdff8b44cd8cbc1af816e944b62a3fe5b80b781501cf1f4759bbc4"
+                "sha256": "bdcf58107ba1a499b25e3db205086767dd409d3f5ab12c90f2d429f55ec774a6"
             },
             {
-                "coord": "org.antlr:antlr4-runtime:jar:sources:4.7.2",
-                "file": "v1/https/repo1.maven.org/maven2/org/antlr/antlr4-runtime/4.7.2/antlr4-runtime-4.7.2-sources.jar",
+                "coord": "org.antlr:antlr4-runtime:jar:sources:4.8-1",
+                "file": "v1/https/repo1.maven.org/maven2/org/antlr/antlr4-runtime/4.8-1/antlr4-runtime-4.8-1-sources.jar",
                 "directDependencies": [],
                 "dependencies": [],
                 "exclusions": [
                     "org.hamcrest:hamcrest-core"
                 ],
-                "url": "https://repo1.maven.org/maven2/org/antlr/antlr4-runtime/4.7.2/antlr4-runtime-4.7.2-sources.jar",
+                "url": "https://repo1.maven.org/maven2/org/antlr/antlr4-runtime/4.8-1/antlr4-runtime-4.8-1-sources.jar",
                 "mirror_urls": [
-                    "https://repo1.maven.org/maven2/org/antlr/antlr4-runtime/4.7.2/antlr4-runtime-4.7.2-sources.jar"
+                    "https://repo1.maven.org/maven2/org/antlr/antlr4-runtime/4.8-1/antlr4-runtime-4.8-1-sources.jar"
                 ],
-                "sha256": "6290b44cc5abaae2d747c966704e80cdfd742b4e2e0c8f9597f84a550e0d7f47"
+                "sha256": "faec795a11db3088027e563cb1199797a2f85a2b510af2815e57a17a10b48353"
             },
             {
                 "coord": "org.apache.commons:commons-collections4:4.4",
@@ -4532,6 +4532,6 @@
             }
         ],
         "version": "0.1.0",
-        "__AUTOGENERATED_FILE_DO_NOT_MODIFY_THIS_FILE_MANUALLY": -1976838186
+        "__AUTOGENERATED_FILE_DO_NOT_MODIFY_THIS_FILE_MANUALLY": -680195464
     }
 }
