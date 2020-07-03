@@ -25,6 +25,9 @@ maven_install(
     excluded_artifacts = ["org.hamcrest:hamcrest-core"],
     fetch_sources = True,
     maven_install_json = "@batfish//:maven_install.json",
+    override_targets = {
+        "org.antlr:antlr4-runtime": "@batfish//projects/lib/antlr4:antlr4_runtime",
+    },
     repositories = [
         "https://repo1.maven.org/maven2",
     ],
