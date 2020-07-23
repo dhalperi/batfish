@@ -30,6 +30,7 @@ java_library(
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_google_code_findbugs_jsr305",
         "@maven//:com_google_guava_guava",
+        "@maven//:com_google_re2j_re2j",
         "@maven//:commons_io_commons_io",
         "@maven//:io_github_java_diff_utils_java_diff_utils",
         "@maven//:io_jaegertracing_jaeger_core",

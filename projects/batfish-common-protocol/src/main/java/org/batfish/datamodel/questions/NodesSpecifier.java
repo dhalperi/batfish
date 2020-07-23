@@ -5,13 +5,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.re2j.Pattern;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -134,7 +134,7 @@ public class NodesSpecifier {
    */
   public static List<AutocompleteSuggestion> autoComplete(
       String query, Set<String> nodes, NodeRolesData nodeRoleData) {
-    final String finalQuery = query == null ? "" : query;
+    String finalQuery = query == null ? "" : query;
 
     // fill in types; will produce something only with finalQuery is empty or something like "NA"
     List<AutocompleteSuggestion> suggestions =

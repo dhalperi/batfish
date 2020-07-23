@@ -5,9 +5,9 @@ import static org.batfish.representation.cumulus.CumulusConversions.DEFAULT_STAT
 import static org.batfish.representation.cumulus.Interface.NULL_INTERFACE_PATTERN;
 
 import com.google.common.base.MoreObjects;
+import com.google.re2j.Matcher;
 import java.io.Serializable;
 import java.util.Objects;
-import java.util.regex.Matcher;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.batfish.datamodel.Ip;

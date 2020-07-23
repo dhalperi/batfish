@@ -5,6 +5,8 @@ import static org.batfish.minesweeper.CommunityVarCollector.collectCommunityVars
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
+import com.google.re2j.Matcher;
+import com.google.re2j.Pattern;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,7 +20,6 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.apache.commons.lang3.SerializationUtils;
@@ -823,10 +824,10 @@ public class Graph {
 
   private void initCommDependencies() {
     // Map community regex matches to Java regex
-    Map<CommunityVar, java.util.regex.Pattern> regexes = new HashMap<>();
+    Map<CommunityVar, Pattern> regexes = new HashMap<>();
     for (CommunityVar c : _allCommunities) {
       if (c.getType() == CommunityVar.Type.REGEX) {
-        java.util.regex.Pattern p = java.util.regex.Pattern.compile(c.getRegex());
+        Pattern p = Pattern.compile(c.getRegex());
         regexes.put(c, p);
       }
     }
@@ -837,7 +838,7 @@ public class Graph {
 
         List<CommunityVar> list = new ArrayList<>();
         _communityDependencies.put(c1, list);
-        java.util.regex.Pattern p = regexes.get(c1);
+        Pattern p = regexes.get(c1);
 
         for (CommunityVar c2 : _allCommunities) {
           if (c2.getType() == CommunityVar.Type.EXACT) {

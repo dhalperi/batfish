@@ -1,8 +1,8 @@
 package org.batfish.grammar;
 
+import com.google.re2j.Pattern;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Pattern;
 import org.antlr.v4.runtime.DefaultErrorStrategy;
 import org.antlr.v4.runtime.InputMismatchException;
 import org.antlr.v4.runtime.IntStream;

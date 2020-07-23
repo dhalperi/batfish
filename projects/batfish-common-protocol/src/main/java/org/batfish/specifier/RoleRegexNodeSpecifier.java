@@ -1,12 +1,12 @@
 package org.batfish.specifier;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.re2j.Pattern;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;

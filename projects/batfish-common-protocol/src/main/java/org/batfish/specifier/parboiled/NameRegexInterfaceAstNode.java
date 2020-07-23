@@ -1,8 +1,8 @@
 package org.batfish.specifier.parboiled;
 
 import com.google.common.base.MoreObjects;
+import com.google.re2j.Pattern;
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 final class NameRegexInterfaceAstNode implements InterfaceAstNode {
   private final String _regex;

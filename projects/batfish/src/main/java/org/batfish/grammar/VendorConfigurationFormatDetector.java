@@ -1,7 +1,7 @@
 package org.batfish.grammar;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.google.re2j.Matcher;
+import com.google.re2j.Pattern;
 import javax.annotation.Nullable;
 import org.batfish.datamodel.ConfigurationFormat;
 

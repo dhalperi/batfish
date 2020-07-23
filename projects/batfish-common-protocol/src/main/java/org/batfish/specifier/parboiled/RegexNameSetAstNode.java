@@ -1,8 +1,8 @@
 package org.batfish.specifier.parboiled;
 
 import com.google.common.base.MoreObjects;
+import com.google.re2j.Pattern;
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 /** Represents the AST node for a regex over set of the names */
 final class RegexNameSetAstNode implements NameSetAstNode {

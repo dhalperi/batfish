@@ -1,12 +1,12 @@
 package org.batfish.minesweeper.utils;
 
+import com.google.re2j.Matcher;
+import com.google.re2j.Pattern;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.batfish.datamodel.Interface;
 import org.batfish.minesweeper.Graph;
 import org.batfish.minesweeper.GraphEdge;

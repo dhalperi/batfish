@@ -8,9 +8,9 @@ import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.re2j.Pattern;
 import java.io.IOException;
 import java.util.SortedMap;
-import java.util.regex.Pattern;
 import org.batfish.common.NetworkSnapshot;
 import org.batfish.datamodel.Configuration;
 import org.batfish.datamodel.EmptyIpSpace;

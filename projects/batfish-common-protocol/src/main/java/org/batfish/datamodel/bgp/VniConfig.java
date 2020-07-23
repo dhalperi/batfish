@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
-import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -75,7 +74,7 @@ public abstract class VniConfig implements Serializable {
     return _routeTarget;
   }
 
-  /** The import route target pattern. Can be compiled into a {@link Pattern} */
+  /** The import route target pattern. Can be compiled into a Pattern. */
   @Nonnull
   public String getImportRouteTarget() {
     return _importRouteTarget;

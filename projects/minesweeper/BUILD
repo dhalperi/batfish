@@ -21,6 +21,7 @@ java_library(
         "@maven//:com_google_auto_service_auto_service_annotations",
         "@maven//:com_google_code_findbugs_jsr305",
         "@maven//:com_google_guava_guava",
+        "@maven//:com_google_re2j_re2j",
         "@maven//:org_apache_commons_commons_lang3",
     ],
 )

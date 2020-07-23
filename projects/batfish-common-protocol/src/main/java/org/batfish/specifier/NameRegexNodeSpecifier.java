@@ -1,9 +1,9 @@
 package org.batfish.specifier;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.re2j.Pattern;
 import java.util.Objects;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 /** A {@link NodeSpecifier} that specifies the set of nodes whose names match the input regex. */
 public final class NameRegexNodeSpecifier implements NodeSpecifier {

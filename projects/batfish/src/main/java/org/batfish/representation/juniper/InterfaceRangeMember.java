@@ -1,13 +1,13 @@
 package org.batfish.representation.juniper;
 
 import com.google.common.base.MoreObjects;
+import com.google.re2j.Matcher;
+import com.google.re2j.Pattern;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 
 /**

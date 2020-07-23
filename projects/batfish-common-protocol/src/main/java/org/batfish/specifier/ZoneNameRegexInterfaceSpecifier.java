@@ -1,10 +1,10 @@
 package org.batfish.specifier;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.re2j.Pattern;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
-import java.util.regex.Pattern;
 import org.batfish.datamodel.Configuration;
 import org.batfish.datamodel.Zone;
 import org.batfish.datamodel.collections.NodeInterfacePair;

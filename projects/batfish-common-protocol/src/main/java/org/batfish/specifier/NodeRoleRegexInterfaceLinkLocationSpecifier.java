@@ -1,6 +1,6 @@
 package org.batfish.specifier;
 
-import java.util.regex.Pattern;
+import com.google.re2j.Pattern;
 import java.util.stream.Stream;
 import org.batfish.datamodel.Configuration;
 

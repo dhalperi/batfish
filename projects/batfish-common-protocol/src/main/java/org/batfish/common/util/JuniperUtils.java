@@ -1,11 +1,11 @@
 package org.batfish.common.util;
 
+import com.google.re2j.Pattern;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 import org.batfish.common.BatfishException;
 
 /**

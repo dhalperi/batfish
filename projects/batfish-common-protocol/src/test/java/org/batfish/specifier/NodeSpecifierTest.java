@@ -4,7 +4,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
-import java.util.regex.Pattern;
+import com.google.re2j.Pattern;
 import org.junit.Test;
 
 public class NodeSpecifierTest {

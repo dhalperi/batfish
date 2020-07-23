@@ -16,6 +16,7 @@ java_library(
         "@maven//:com_fasterxml_jackson_core_jackson_core",
         "@maven//:com_google_code_findbugs_jsr305",
         "@maven//:com_google_guava_guava",
+        "@maven//:com_google_re2j_re2j",
         "@maven//:org_antlr_antlr4_runtime",
     ],
 )

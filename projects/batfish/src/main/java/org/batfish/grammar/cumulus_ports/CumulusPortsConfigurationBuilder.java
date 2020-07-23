@@ -3,8 +3,8 @@ package org.batfish.grammar.cumulus_ports;
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.Integer.parseInt;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.google.re2j.Matcher;
+import com.google.re2j.Pattern;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.batfish.common.Warnings;

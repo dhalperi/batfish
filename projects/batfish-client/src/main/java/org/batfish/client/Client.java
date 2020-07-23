@@ -15,6 +15,8 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Closer;
+import com.google.re2j.Pattern;
+import com.google.re2j.PatternSyntaxException;
 import io.jaegertracing.Configuration;
 import io.jaegertracing.Configuration.ReporterConfiguration;
 import io.jaegertracing.Configuration.SamplerConfiguration;
@@ -50,8 +52,6 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.ws.rs.HttpMethod;
@@ -524,7 +524,7 @@ public class Client extends AbstractClient implements IClient {
         try {
           Pattern.compile(value.textValue());
         } catch (PatternSyntaxException e) {
-          throw new BatfishException("It is not a valid Java regular " + "expression", e);
+          throw new BatfishException("It is not a valid Java regular expression", e);
         }
         break;
       case JSON_PATH_REGEX:

@@ -3,10 +3,10 @@ package org.batfish.grammar.cisco_nxos;
 import static org.batfish.grammar.cisco_nxos.CiscoNxosControlPlaneExtractor.toType;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.re2j.Matcher;
+import com.google.re2j.Pattern;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

@@ -1,8 +1,8 @@
 package org.batfish.grammar;
 
+import com.google.re2j.Matcher;
+import com.google.re2j.Pattern;
 import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.batfish.common.util.BatfishObjectMapper;
 import org.batfish.datamodel.collections.BgpAdvertisementsByVrf;

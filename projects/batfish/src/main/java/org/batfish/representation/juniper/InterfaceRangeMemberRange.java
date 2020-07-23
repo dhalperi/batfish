@@ -4,12 +4,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static org.batfish.representation.juniper.InterfaceRange.toInterfaceId;
 
 import com.google.common.base.MoreObjects;
+import com.google.re2j.Matcher;
+import com.google.re2j.Pattern;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 

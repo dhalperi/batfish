@@ -1,9 +1,9 @@
 package org.batfish.specifier.parboiled;
 
 import com.google.common.base.MoreObjects;
+import com.google.re2j.Pattern;
+import com.google.re2j.PatternSyntaxException;
 import java.util.Objects;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 final class RegexAstNode implements AstNode {
   private final String _regex;

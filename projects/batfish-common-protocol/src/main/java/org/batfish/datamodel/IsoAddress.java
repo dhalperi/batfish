@@ -6,10 +6,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.BaseEncoding;
+import com.google.re2j.Pattern;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 
 /**

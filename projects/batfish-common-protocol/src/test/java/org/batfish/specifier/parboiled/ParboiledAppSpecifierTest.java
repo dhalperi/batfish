@@ -5,9 +5,9 @@ import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.re2j.Pattern;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Pattern;
 import org.batfish.datamodel.Protocol;
 import org.batfish.datamodel.SubRange;
 import org.batfish.datamodel.applications.IcmpTypeCodesApplication;

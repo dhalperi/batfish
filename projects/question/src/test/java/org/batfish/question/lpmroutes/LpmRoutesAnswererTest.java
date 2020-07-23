@@ -18,9 +18,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.re2j.Pattern;
 import java.util.List;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import org.batfish.datamodel.AnnotatedRoute;
 import org.batfish.datamodel.ConnectedRoute;
 import org.batfish.datamodel.Ip;
@@ -76,7 +76,7 @@ public class LpmRoutesAnswererTest {
 
   @Test
   public void testToRow() {
-    final ImmutableMap<String, ColumnMetadata> columnMap =
+    ImmutableMap<String, ColumnMetadata> columnMap =
         getColumnMetadata().stream()
             .collect(ImmutableMap.toImmutableMap(ColumnMetadata::getName, Function.identity()));
     Row row =
@@ -103,11 +103,11 @@ public class LpmRoutesAnswererTest {
 
   @Test
   public void testFilteringByNodes() {
-    final ImmutableMap<String, ColumnMetadata> columnMap =
+    ImmutableMap<String, ColumnMetadata> columnMap =
         getColumnMetadata().stream()
             .collect(ImmutableMap.toImmutableMap(ColumnMetadata::getName, Function.identity()));
 
-    final Ip lpmIp = Ip.parse("1.1.1.1");
+    Ip lpmIp = Ip.parse("1.1.1.1");
     List<Row> rows =
         getRows(
             ImmutableSortedMap.of(
@@ -125,11 +125,11 @@ public class LpmRoutesAnswererTest {
 
   @Test
   public void testFilteringByVrfs() {
-    final ImmutableMap<String, ColumnMetadata> columnMap =
+    ImmutableMap<String, ColumnMetadata> columnMap =
         getColumnMetadata().stream()
             .collect(ImmutableMap.toImmutableMap(ColumnMetadata::getName, Function.identity()));
 
-    final Ip lpmIp = Ip.parse("1.1.1.1");
+    Ip lpmIp = Ip.parse("1.1.1.1");
     List<Row> rows =
         getRows(
             ImmutableSortedMap.of(
