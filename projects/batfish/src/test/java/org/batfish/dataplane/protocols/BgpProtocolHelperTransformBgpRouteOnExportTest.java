@@ -213,8 +213,8 @@ public final class BgpProtocolHelperTransformBgpRouteOnExportTest {
       // By default, _fromNeighbor doesn't have sendCommunity set; should see no communities
       Bgpv4Route.Builder transformedAggregateRoute = runTransformBgpRoutePreExport(aggRoute);
       Bgpv4Route.Builder transformedBgpRoute = runTransformBgpRoutePreExport(bgpv4Route);
-      assertThat(transformedAggregateRoute.getCommunities(), empty());
-      assertThat(transformedBgpRoute.getCommunities(), empty());
+      assertThat(transformedAggregateRoute.getCommunities().getCommunities(), empty());
+      assertThat(transformedBgpRoute.getCommunities().getCommunities(), empty());
 
       // Now set sendCommunity and make sure communities appear in transformed routes.
       _headNeighbor =
@@ -229,8 +229,8 @@ public final class BgpProtocolHelperTransformBgpRouteOnExportTest {
               .build();
       transformedAggregateRoute = runTransformBgpRoutePreExport(aggRoute);
       transformedBgpRoute = runTransformBgpRoutePreExport(bgpv4Route);
-      assertThat(transformedAggregateRoute.getCommunities(), equalTo(communities));
-      assertThat(transformedBgpRoute.getCommunities(), equalTo(communities));
+      assertThat(transformedAggregateRoute.getCommunities().getCommunities(), equalTo(communities));
+      assertThat(transformedBgpRoute.getCommunities().getCommunities(), equalTo(communities));
     }
   }
 

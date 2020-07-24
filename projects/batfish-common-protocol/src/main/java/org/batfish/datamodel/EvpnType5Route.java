@@ -12,7 +12,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import org.batfish.datamodel.bgp.RouteDistinguisher;
-import org.batfish.datamodel.bgp.community.Community;
+import org.batfish.datamodel.routing_policy.communities.CommunitySet;
 
 /** An EVPN type 5 route */
 @ParametersAreNonnullByDefault
@@ -77,7 +77,7 @@ public final class EvpnType5Route extends EvpnRoute<EvpnType5Route.Builder, Evpn
       @JsonProperty(PROP_ADMINISTRATIVE_COST) int admin,
       @Nullable @JsonProperty(PROP_AS_PATH) AsPath asPath,
       @Nullable @JsonProperty(PROP_CLUSTER_LIST) Set<Long> clusterList,
-      @Nullable @JsonProperty(PROP_COMMUNITIES) Set<Community> communities,
+      @Nullable @JsonProperty(PROP_COMMUNITIES) CommunitySet communities,
       @JsonProperty(PROP_DISCARD) boolean discard,
       @JsonProperty(PROP_LOCAL_PREFERENCE) long localPreference,
       @JsonProperty(PROP_METRIC) long med,
@@ -103,7 +103,7 @@ public final class EvpnType5Route extends EvpnRoute<EvpnType5Route.Builder, Evpn
         admin,
         firstNonNull(asPath, AsPath.empty()),
         firstNonNull(clusterList, ImmutableSet.of()),
-        firstNonNull(communities, ImmutableSet.of()),
+        firstNonNull(communities, CommunitySet.empty()),
         discard,
         localPreference,
         med,
@@ -127,7 +127,7 @@ public final class EvpnType5Route extends EvpnRoute<EvpnType5Route.Builder, Evpn
       int admin,
       AsPath asPath,
       Set<Long> clusterList,
-      Set<Community> communities,
+      CommunitySet communities,
       boolean discard,
       long localPreference,
       long med,

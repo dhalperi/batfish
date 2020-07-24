@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Collection;
@@ -46,8 +47,7 @@ public abstract class BgpRoute<B extends Builder<B, R>, R extends BgpRoute<B, R>
     @Nonnull protected AsPath _asPath;
     // Invariant: either immutable or a local copy shielded from external mutations.
     @Nonnull protected Set<Long> _clusterList;
-    // Invariant: either immutable or a local copy shielded from external mutations.
-    @Nonnull protected Set<Community> _communities;
+    @Nonnull protected CommunitySet _communities;
     protected boolean _discard;
     protected long _localPreference;
     @Nullable protected String _nextHopInterface;
@@ -61,7 +61,7 @@ public abstract class BgpRoute<B extends Builder<B, R>, R extends BgpRoute<B, R>
 
     public Builder() {
       _asPath = AsPath.empty();
-      _communities = ImmutableSet.of();
+      _communities = CommunitySet.empty();
       _clusterList = ImmutableSet.of();
     }
 
@@ -97,10 +97,8 @@ public abstract class BgpRoute<B extends Builder<B, R>, R extends BgpRoute<B, R>
     }
 
     @Nonnull
-    public Set<Community> getCommunities() {
-      return _communities instanceof ImmutableSet
-          ? _communities
-          : Collections.unmodifiableSet(_communities);
+    public CommunitySet getCommunities() {
+      return _communities;
     }
 
     public long getLocalPreference() {
@@ -166,46 +164,65 @@ public abstract class BgpRoute<B extends Builder<B, R>, R extends BgpRoute<B, R>
 
     /** Overwrite communities */
     public B setCommunities(CommunitySet communities) {
-      _communities = communities.getCommunities();
+      _communities = communities;
       return getThis();
     }
 
     /** Overwrite communities */
     public B setCommunities(Collection<? extends Community> communities) {
-      if (communities instanceof ImmutableSet) {
-        @SuppressWarnings("unchecked") // cannot be mutated, cast to superclass is safe.
-        ImmutableSet<Community> immutableComm = (ImmutableSet<Community>) communities;
-        _communities = immutableComm;
-      } else {
-        _communities = new HashSet<>(communities);
-      }
+      _communities = CommunitySet.of(communities);
       return getThis();
     }
 
     /** Add communities */
-    public B addCommunities(Collection<? extends Community> communities) {
-      if (_communities instanceof ImmutableSet) {
-        _communities = new HashSet<>(_communities);
+    public B addCommunities(CommunitySet communities) {
+      if (_communities.isEmpty()) {
+        return setCommunities(communities);
       }
-      _communities.addAll(communities);
+      return addCommunities(communities.getCommunities());
+    }
+
+    /** Add communities */
+    public B addCommunities(Collection<? extends Community> communities) {
+      if (_communities.isEmpty()) {
+        return setCommunities(communities);
+      }
+      ImmutableSet<Community> added =
+          ImmutableSet.<Community>builder()
+              .addAll(_communities.getCommunities())
+              .addAll(communities)
+              .build();
+      _communities = CommunitySet.of(added);
       return getThis();
     }
 
     /** Add a single community */
     public B addCommunity(Community community) {
-      if (_communities instanceof ImmutableSet) {
-        _communities = new HashSet<>(_communities);
+      if (_communities.isEmpty()) {
+        _communities = CommunitySet.of(community);
+        return getThis();
       }
-      _communities.add(community);
+      ImmutableSet<Community> added =
+          ImmutableSet.<Community>builder()
+              .addAll(_communities.getCommunities())
+              .add(community)
+              .build();
+      _communities = CommunitySet.of(added);
       return getThis();
     }
 
     /** Add communities */
     public B removeCommunities(Set<Community> communities) {
-      if (_communities instanceof ImmutableSet) {
-        _communities = new HashSet<>(_communities);
+      if (_communities.isEmpty()) {
+        return getThis();
       }
-      _communities.removeAll(communities);
+      ImmutableList.Builder<Community> retained = ImmutableList.builder();
+      for (Community c : _communities.getCommunities()) {
+        if (!communities.contains(c)) {
+          retained.add(c);
+        }
+      }
+      _communities = CommunitySet.of(retained.build());
       return getThis();
     }
 
@@ -298,7 +315,7 @@ public abstract class BgpRoute<B extends Builder<B, R>, R extends BgpRoute<B, R>
       @Nullable Ip nextHopIp,
       int admin,
       @Nullable AsPath asPath,
-      @Nullable Set<Community> communities,
+      @Nullable CommunitySet communities,
       boolean discard,
       long localPreference,
       long med,
@@ -323,7 +340,7 @@ public abstract class BgpRoute<B extends Builder<B, R>, R extends BgpRoute<B, R>
     _asPath = firstNonNull(asPath, AsPath.empty());
     _clusterList =
         clusterList == null ? ImmutableSet.of() : CLUSTER_CACHE.getUnchecked(clusterList);
-    _communities = communities == null ? CommunitySet.empty() : CommunitySet.of(communities);
+    _communities = firstNonNull(communities, CommunitySet.empty());
     _discard = discard;
     _localPreference = localPreference;
     _med = med;

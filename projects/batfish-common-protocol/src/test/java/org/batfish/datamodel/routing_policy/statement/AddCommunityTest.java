@@ -7,7 +7,9 @@ import static org.hamcrest.Matchers.contains;
 import com.google.common.testing.EqualsTester;
 import org.apache.commons.lang3.SerializationUtils;
 import org.batfish.common.util.BatfishObjectMapper;
+import org.batfish.datamodel.BgpRoute;
 import org.batfish.datamodel.Bgpv4Route;
+import org.batfish.datamodel.Bgpv4Route.Builder;
 import org.batfish.datamodel.Configuration;
 import org.batfish.datamodel.ConfigurationFormat;
 import org.batfish.datamodel.ConnectedRoute;
@@ -57,7 +59,9 @@ public class AddCommunityTest {
     Environment e = Environment.builder(c).setOutputRoute(Bgpv4Route.builder()).build();
     ac.execute(e);
     assertThat(
-        ((Bgpv4Route.Builder) e.getOutputRoute()).getCommunities(),
+        ((BgpRoute.Builder<Builder, Bgpv4Route>) ((Builder) e.getOutputRoute()))
+            .getCommunities()
+            .getCommunities(),
         contains(StandardCommunity.of(1L)));
   }
 }

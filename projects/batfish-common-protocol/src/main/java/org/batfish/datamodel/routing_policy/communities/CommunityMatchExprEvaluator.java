@@ -1,5 +1,8 @@
 package org.batfish.datamodel.routing_policy.communities;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import javax.annotation.Nonnull;
 import org.batfish.common.util.PatternProvider;
 import org.batfish.datamodel.LineAction;
@@ -84,15 +87,54 @@ public final class CommunityMatchExprEvaluator
     return expr.accept(this, arg);
   }
 
+  private static final class CommunityMatchRegexKey {
+    public final @Nonnull CommunityMatchRegex match;
+    public final @Nonnull Community matchee;
+
+    public CommunityMatchRegexKey(CommunityMatchRegex match, Community matchee) {
+      this.match = match;
+      this.matchee = matchee;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      } else if (!(o instanceof CommunityMatchRegexKey)) {
+        return false;
+      }
+      CommunityMatchRegexKey that = (CommunityMatchRegexKey) o;
+      return match.equals(that.match) && matchee.equals(that.matchee);
+    }
+
+    @Override
+    public int hashCode() {
+      return match.hashCode() * 31 + matchee.hashCode();
+    }
+  }
+
+  // Soft values: let it be garbage collected in times of pressure.
+  // Maximum size 2^16: Just some upper bound on cache size, well less than GiB.
+  private static final LoadingCache<CommunityMatchRegexKey, Boolean> REGEX_CACHE =
+      CacheBuilder.newBuilder()
+          .softValues()
+          .maximumSize(1 << 16)
+          .build(
+              CacheLoader.from(
+                  key -> {
+                    assert key != null;
+                    return PatternProvider.fromString(key.match.getRegex())
+                        .matcher(
+                            key.match
+                                .getCommunityRendering()
+                                .accept(CommunityToRegexInputString.instance(), key.matchee))
+                        .find();
+                  }));
+
   @Override
   public @Nonnull Boolean visitCommunityMatchRegex(
       CommunityMatchRegex communityMatchRegex, Community arg) {
-    return PatternProvider.fromString(communityMatchRegex.getRegex())
-        .matcher(
-            communityMatchRegex
-                .getCommunityRendering()
-                .accept(CommunityToRegexInputString.instance(), arg))
-        .find();
+    return REGEX_CACHE.getUnchecked(new CommunityMatchRegexKey(communityMatchRegex, arg));
   }
 
   @Override

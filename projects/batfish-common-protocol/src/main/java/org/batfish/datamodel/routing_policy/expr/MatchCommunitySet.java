@@ -42,9 +42,10 @@ public final class MatchCommunitySet extends BooleanExpr {
         && environment.getOutputRoute() instanceof BgpRoute.Builder<?, ?>) {
       BgpRoute.Builder<?, ?> bgpRouteBuilder =
           (BgpRoute.Builder<?, ?>) environment.getOutputRoute();
-      inputCommunities = bgpRouteBuilder.getCommunities();
+      inputCommunities = bgpRouteBuilder.getCommunities().getCommunities();
     } else if (environment.getReadFromIntermediateBgpAttributes()) {
-      inputCommunities = environment.getIntermediateBgpAttributes().getCommunities();
+      inputCommunities =
+          environment.getIntermediateBgpAttributes().getCommunities().getCommunities();
     } else if (environment.getOriginalRoute() instanceof BgpRoute) {
       BgpRoute<?, ?> bgpRoute = (BgpRoute<?, ?>) environment.getOriginalRoute();
       inputCommunities = bgpRoute.getCommunities().getCommunities();

@@ -4,11 +4,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.batfish.datamodel.BgpRoute;
-import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.routing_policy.Result;
 import org.batfish.datamodel.routing_policy.statement.Statement;
@@ -31,10 +29,9 @@ public final class SetCommunities extends Statement {
     CommunityContext ctx = CommunityContext.fromEnvironment(environment);
     CommunitySet communitySet = _communitySetExpr.accept(CommunitySetExprEvaluator.instance(), ctx);
     BgpRoute.Builder<?, ?> bgpRoute = (BgpRoute.Builder<?, ?>) environment.getOutputRoute();
-    Set<Community> communities = communitySet.getCommunities();
-    bgpRoute.setCommunities(communities);
+    bgpRoute.setCommunities(communitySet);
     if (environment.getWriteToIntermediateBgpAttributes()) {
-      environment.getIntermediateBgpAttributes().setCommunities(communities);
+      environment.getIntermediateBgpAttributes().setCommunities(communitySet);
     }
     return new Result();
   }

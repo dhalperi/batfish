@@ -30,6 +30,7 @@ import org.batfish.datamodel.bgp.BgpTopologyUtils.ConfedSessionType;
 import org.batfish.datamodel.bgp.community.StandardCommunity;
 import org.batfish.datamodel.routing_policy.Environment.Direction;
 import org.batfish.datamodel.routing_policy.RoutingPolicy;
+import org.batfish.datamodel.routing_policy.communities.CommunitySet;
 
 @ParametersAreNonnullByDefault
 public final class BgpProtocolHelper {
@@ -110,7 +111,7 @@ public final class BgpProtocolHelper {
     }
 
     // Set transformed route's communities
-    builder.setCommunities(ImmutableSet.of());
+    builder.setCommunities(CommunitySet.empty());
     if (af.getAddressFamilyCapabilities().getSendCommunity()) {
       builder.addCommunities(route.getStandardCommunities());
     }

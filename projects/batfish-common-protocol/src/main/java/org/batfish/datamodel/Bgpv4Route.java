@@ -11,7 +11,7 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import org.batfish.datamodel.bgp.community.Community;
+import org.batfish.datamodel.routing_policy.communities.CommunitySet;
 
 /**
  * A BGP Route. Captures attributes of both iBGP and eBGP routes.
@@ -76,7 +76,7 @@ public final class Bgpv4Route extends BgpRoute<Bgpv4Route.Builder, Bgpv4Route> {
       @Nullable @JsonProperty(PROP_NEXT_HOP_IP) Ip nextHopIp,
       @JsonProperty(PROP_ADMINISTRATIVE_COST) int admin,
       @Nullable @JsonProperty(PROP_AS_PATH) AsPath asPath,
-      @Nullable @JsonProperty(PROP_COMMUNITIES) Set<Community> communities,
+      @Nullable @JsonProperty(PROP_COMMUNITIES) CommunitySet communities,
       @JsonProperty(PROP_DISCARD) boolean discard,
       @JsonProperty(PROP_LOCAL_PREFERENCE) long localPreference,
       @JsonProperty(PROP_METRIC) long med,
@@ -122,7 +122,7 @@ public final class Bgpv4Route extends BgpRoute<Bgpv4Route.Builder, Bgpv4Route> {
       @Nullable Ip nextHopIp,
       int admin,
       @Nullable AsPath asPath,
-      @Nullable Set<Community> communities,
+      @Nullable CommunitySet communities,
       boolean discard,
       long localPreference,
       long med,

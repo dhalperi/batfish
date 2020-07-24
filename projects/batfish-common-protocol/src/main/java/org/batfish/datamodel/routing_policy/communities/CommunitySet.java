@@ -86,6 +86,10 @@ public final class CommunitySet implements Serializable {
     return ret.build();
   }
 
+  public boolean isEmpty() {
+    return _communities.isEmpty();
+  }
+
   @Override
   public boolean equals(@Nullable Object obj) {
     if (this == obj) {

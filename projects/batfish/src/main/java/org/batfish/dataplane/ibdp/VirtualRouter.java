@@ -201,7 +201,7 @@ public class VirtualRouter implements Serializable {
   /** A {@link Vrf} that this virtual router represents */
   final Vrf _vrf;
 
-  VirtualRouter(@Nonnull final String name, @Nonnull final Node node) {
+  VirtualRouter(@Nonnull String name, @Nonnull Node node) {
     _node = node;
     _c = node.getConfiguration();
     _name = name;
@@ -263,7 +263,7 @@ public class VirtualRouter implements Serializable {
   /** Lookup the VirtualRouter owner of a remote BGP neighbor. */
   @Nullable
   private static VirtualRouter getRemoteBgpNeighborVR(
-      @Nonnull BgpPeerConfigId bgpId, @Nonnull final Map<String, Node> allNodes) {
+      @Nonnull BgpPeerConfigId bgpId, @Nonnull Map<String, Node> allNodes) {
     return allNodes.get(bgpId.getHostname()).getVirtualRouters().get(bgpId.getVrfName());
   }
 
@@ -505,7 +505,7 @@ public class VirtualRouter implements Serializable {
   void processExternalBgpAdvertisements(
       Set<BgpAdvertisement> externalAdverts,
       Map<Ip, Map<String, Set<String>>> ipVrfOwners,
-      final Map<String, Node> allNodes,
+      Map<String, Node> allNodes,
       BgpTopology bgpTopology,
       NetworkConfigurations networkConfigurations) {
 
@@ -642,8 +642,7 @@ public class VirtualRouter implements Serializable {
         transformedIncomingRouteBuilder.setAsPath(transformedOutgoingRoute.getAsPath());
 
         // Incoming communities
-        transformedIncomingRouteBuilder.addCommunities(
-            transformedOutgoingRoute.getCommunities().getCommunities());
+        transformedIncomingRouteBuilder.addCommunities(transformedOutgoingRoute.getCommunities());
 
         // Incoming protocol
         transformedIncomingRouteBuilder.setProtocol(targetProtocol);
@@ -1391,7 +1390,7 @@ public class VirtualRouter implements Serializable {
       RibDelta<Bgpv4Route> ebgpBestPathDelta,
       RibDelta<Bgpv4Route> bgpDelta,
       RibDelta<AnnotatedRoute<AbstractRoute>> mainDelta,
-      final Map<String, Node> allNodes,
+      Map<String, Node> allNodes,
       BgpTopology bgpTopology,
       NetworkConfigurations networkConfigurations) {
     for (EdgeId edge : _bgpRoutingProcess._bgpv4IncomingRoutes.keySet()) {
@@ -1414,7 +1413,7 @@ public class VirtualRouter implements Serializable {
       Map<String, Node> allNodes,
       BgpTopology bgpTopology,
       NetworkConfigurations networkConfigurations) {
-    final BgpSessionProperties session = getBgpSessionProperties(bgpTopology, edge);
+    BgpSessionProperties session = getBgpSessionProperties(bgpTopology, edge);
 
     BgpPeerConfigId remoteConfigId = edge.tail();
     BgpPeerConfigId ourConfigId = edge.head();
@@ -1634,7 +1633,7 @@ public class VirtualRouter implements Serializable {
    */
   void finalizeBgpRoutesAndQueueOutgoingMessages(
       Map<Bgpv4Rib, RibDelta<Bgpv4Route>> stagingDeltas,
-      final Map<String, Node> allNodes,
+      Map<String, Node> allNodes,
       BgpTopology bgpTopology,
       NetworkConfigurations networkConfigurations) {
 
@@ -1722,7 +1721,7 @@ public class VirtualRouter implements Serializable {
    * plane iterations.
    */
   void queueInitialBgpMessages(
-      final BgpTopology bgpTopology, final Map<String, Node> allNodes, NetworkConfigurations nc) {
+      BgpTopology bgpTopology, Map<String, Node> allNodes, NetworkConfigurations nc) {
     if (_bgpRoutingProcess == null) {
       // nothing to do
       return;
