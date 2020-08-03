@@ -28,6 +28,7 @@ import org.batfish.datamodel.Flow;
 import org.batfish.datamodel.FlowDisposition;
 import org.batfish.datamodel.ForwardingAnalysis;
 import org.batfish.datamodel.Ip;
+import org.batfish.datamodel.IpSpaceContainsIp;
 import org.batfish.datamodel.Topology;
 import org.batfish.datamodel.collections.NodeInterfacePair;
 import org.batfish.datamodel.flow.FirewallSessionTraceInfo;
@@ -111,33 +112,34 @@ public class TracerouteEngineImplContext {
   FlowDisposition computeDisposition(String hostname, String outgoingInterfaceName, Ip dstIp) {
     String vrfName =
         _configurations.get(hostname).getAllInterfaces().get(outgoingInterfaceName).getVrfName();
-    if (_forwardingAnalysis
-        .getDeliveredToSubnet()
-        .get(hostname)
-        .get(vrfName)
-        .get(outgoingInterfaceName)
-        .containsIp(dstIp, ImmutableMap.of())) {
+    IpSpaceContainsIp containsIp = new IpSpaceContainsIp(dstIp, ImmutableMap.of());
+    if (containsIp.visit(
+        _forwardingAnalysis
+            .getDeliveredToSubnet()
+            .get(hostname)
+            .get(vrfName)
+            .get(outgoingInterfaceName))) {
       return FlowDisposition.DELIVERED_TO_SUBNET;
-    } else if (_forwardingAnalysis
-        .getExitsNetwork()
-        .get(hostname)
-        .get(vrfName)
-        .get(outgoingInterfaceName)
-        .containsIp(dstIp, ImmutableMap.of())) {
+    } else if (containsIp.visit(
+        _forwardingAnalysis
+            .getExitsNetwork()
+            .get(hostname)
+            .get(vrfName)
+            .get(outgoingInterfaceName))) {
       return FlowDisposition.EXITS_NETWORK;
-    } else if (_forwardingAnalysis
-        .getInsufficientInfo()
-        .get(hostname)
-        .get(vrfName)
-        .get(outgoingInterfaceName)
-        .containsIp(dstIp, ImmutableMap.of())) {
+    } else if (containsIp.visit(
+        _forwardingAnalysis
+            .getInsufficientInfo()
+            .get(hostname)
+            .get(vrfName)
+            .get(outgoingInterfaceName))) {
       return FlowDisposition.INSUFFICIENT_INFO;
-    } else if (_forwardingAnalysis
-        .getNeighborUnreachable()
-        .get(hostname)
-        .get(vrfName)
-        .get(outgoingInterfaceName)
-        .containsIp(dstIp, ImmutableMap.of())) {
+    } else if (containsIp.visit(
+        _forwardingAnalysis
+            .getNeighborUnreachable()
+            .get(hostname)
+            .get(vrfName)
+            .get(outgoingInterfaceName))) {
       return FlowDisposition.NEIGHBOR_UNREACHABLE;
     } else {
       throw new BatfishException(
