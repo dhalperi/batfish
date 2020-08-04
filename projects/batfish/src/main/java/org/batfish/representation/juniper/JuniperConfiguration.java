@@ -372,8 +372,14 @@ public final class JuniperConfiguration extends VendorConfiguration {
     initDefaultBgpExportPolicy();
     initDefaultBgpImportPolicy();
     String vrfName = routingInstance.getName();
-    int ebgpAdmin = RoutingProtocol.BGP.getDefaultAdministrativeCost(_c.getConfigurationFormat());
-    int ibgpAdmin = RoutingProtocol.IBGP.getDefaultAdministrativeCost(_c.getConfigurationFormat());
+    int ebgpAdmin =
+        firstNonNull(
+            mg.getPreference(),
+            RoutingProtocol.BGP.getDefaultAdministrativeCost(_c.getConfigurationFormat()));
+    int ibgpAdmin =
+        firstNonNull(
+            mg.getPreference(),
+            RoutingProtocol.IBGP.getDefaultAdministrativeCost(_c.getConfigurationFormat()));
     BgpProcess proc = new BgpProcess(getRouterId(routingInstance), ebgpAdmin, ibgpAdmin);
     boolean multipathEbgp = false;
     boolean multipathIbgp = false;
