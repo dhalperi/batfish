@@ -1260,7 +1260,7 @@ public final class CumulusConversions {
    */
   @VisibleForTesting
   @Nullable
-  static Long inferClusterId(final BgpVrf bgpVrf, final Ip routerId, final BgpNeighbor neighbor) {
+  static Long inferClusterId(BgpVrf bgpVrf, Ip routerId, BgpNeighbor neighbor) {
     // Do not set cluster Id if peer is eBGP
     if (!Objects.equals(neighbor.getRemoteAs(), bgpVrf.getAutonomousSystem())) {
       return null;
@@ -1424,7 +1424,7 @@ public final class CumulusConversions {
       IpCommunityListStandardLine line) {
     return new CommunitySetAclLine(
         line.getAction(),
-        new CommunitySetMatchAll(
+        CommunitySetMatchAll.create(
             line.getCommunities().stream()
                 .map(community -> new HasCommunity(new CommunityIs(community)))
                 .collect(ImmutableSet.toImmutableSet())));

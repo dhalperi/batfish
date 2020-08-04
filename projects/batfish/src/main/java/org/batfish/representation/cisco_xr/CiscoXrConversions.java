@@ -201,7 +201,7 @@ public class CiscoXrConversions {
    * IpsecPeerConfig}
    */
   private static void convertCryptoMapEntry(
-      final Configuration c,
+      Configuration c,
       CryptoMapEntry cryptoMapEntry,
       String cryptoMapNameSeqNumber,
       String cryptoMapName,
@@ -566,7 +566,7 @@ public class CiscoXrConversions {
    */
   public static @Nonnull CommunitySetMatchExpr convertMatchesAnyToCommunitySetMatchExpr(
       XrCommunitySet communitySet, Configuration c) {
-    return new CommunitySetMatchAny(
+    return CommunitySetMatchAny.create(
         communitySet.getElements().stream()
             .map(elem -> elem.accept(CommunitySetElemToCommunitySetMatchExpr.INSTANCE, c))
             .collect(ImmutableSet.toImmutableSet()));
@@ -578,7 +578,7 @@ public class CiscoXrConversions {
    */
   public static @Nonnull CommunitySetMatchExpr convertMatchesEveryToCommunitySetMatchExpr(
       XrCommunitySet communitySet, Configuration c) {
-    return new CommunitySetMatchAll(
+    return CommunitySetMatchAll.create(
         communitySet.getElements().stream()
             .map(elem -> elem.accept(CommunitySetElemToCommunitySetMatchExpr.INSTANCE, c))
             .collect(ImmutableSet.toImmutableSet()));
@@ -612,7 +612,7 @@ public class CiscoXrConversions {
    */
   public static @Nonnull CommunitySetMatchExpr convertMatchesAnyToCommunitySetMatchExpr(
       ExtcommunitySetRt extcommunitySetRt, Configuration c) {
-    return new CommunitySetMatchAny(
+    return CommunitySetMatchAny.create(
         extcommunitySetRt.getElements().stream()
             .map(elem -> elem.accept(ExtcommunitySetRtElemToCommunitySetMatchExpr.INSTANCE, c))
             .collect(ImmutableSet.toImmutableSet()));
@@ -625,7 +625,7 @@ public class CiscoXrConversions {
    */
   public static @Nonnull CommunitySetMatchExpr convertMatchesEveryToCommunitySetMatchExpr(
       ExtcommunitySetRt extcommunitySetRt, Configuration c) {
-    return new CommunitySetMatchAll(
+    return CommunitySetMatchAll.create(
         extcommunitySetRt.getElements().stream()
             .map(elem -> elem.accept(ExtcommunitySetRtElemToCommunitySetMatchExpr.INSTANCE, c))
             .collect(ImmutableSet.toImmutableSet()));

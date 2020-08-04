@@ -979,7 +979,7 @@ public final class CiscoNxosConfiguration extends VendorConfiguration {
       IpCommunityListStandardLine line) {
     return new CommunitySetAclLine(
         line.getAction(),
-        new CommunitySetMatchAll(
+        CommunitySetMatchAll.create(
             line.getCommunities().stream()
                 .map(community -> new HasCommunity(new CommunityIs(community)))
                 .collect(ImmutableSet.toImmutableSet())));

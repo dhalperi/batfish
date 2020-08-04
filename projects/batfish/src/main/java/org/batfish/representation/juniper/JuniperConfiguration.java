@@ -822,7 +822,7 @@ public final class JuniperConfiguration extends VendorConfiguration {
   private static @Nonnull CommunitySetMatchExpr toCommunitySetMatchExpr(
       NamedCommunity namedCommunity) {
     CommunitySetMatchExpr match =
-        new CommunitySetMatchAll(
+        CommunitySetMatchAll.create(
             namedCommunity.getMembers().stream()
                 .map(member -> member.accept(CommunityMemberToCommunityMatchExpr.INSTANCE))
                 .map(HasCommunity::new)
