@@ -20,7 +20,7 @@ public enum InterfaceType {
   REDUNDANT_CHILD,
   /** A logical tunnel interface (e.g., GRE, IP-in-IP encapsulation) */
   TUNNEL,
-  /** Uknknown interface type */
+  /** Unknown interface type */
   UNKNOWN, // for use as sentinel value
   /** Logical VLAN/irb interface */
   VLAN,

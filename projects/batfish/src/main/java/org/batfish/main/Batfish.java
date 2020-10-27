@@ -1837,7 +1837,16 @@ public class Batfish extends PluginConsumer implements IBatfish {
         .map(iface -> configurations.getInterface(iface.getHostname(), iface.getInterface()))
         .filter(Optional::isPresent)
         .map(Optional::get)
+        .filter(Batfish::interfaceCanBeBlacklisted)
         .forEach(Interface::blacklist);
+  }
+
+  @VisibleForTesting
+  static boolean interfaceCanBeBlacklisted(@Nonnull Interface i) {
+    if (i.getInterfaceType() == InterfaceType.PHYSICAL) {
+      return true;
+    }
+    return false;
   }
 
   @VisibleForTesting
