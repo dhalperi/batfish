@@ -51,7 +51,7 @@ public final class AnnotatedRoute<R extends AbstractRoute>
       return false;
     }
     AnnotatedRoute<?> o = (AnnotatedRoute<?>) obj;
-    return _route.equals(o._route) && _sourceVrf.equals(o._sourceVrf);
+    return hashCode() == o.hashCode() && _route.equals(o._route) && _sourceVrf.equals(o._sourceVrf);
   }
 
   @Override
