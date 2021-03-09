@@ -26,6 +26,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import net.sf.javabdd.BDD;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.batfish.common.bdd.BDDPacket;
 import org.batfish.common.bdd.IpSpaceToBDD;
 import org.batfish.common.bdd.MemoizedIpSpaceToBDD;
@@ -37,6 +39,7 @@ import org.batfish.specifier.LocationInfo;
 
 /** Implementation of {@link ForwardingAnalysis}. */
 public final class ForwardingAnalysisImpl implements ForwardingAnalysis, Serializable {
+  private static final Logger LOGGER = LogManager.getLogger(ForwardingAnalysisImpl.class);
 
   /** node -&gt; vrf -&gt; interface -&gt; ips accepted by that interface */
   private final Map<String, Map<String, Map<String, IpSpace>>> _acceptedIps;
@@ -1511,6 +1514,7 @@ public final class ForwardingAnalysisImpl implements ForwardingAnalysis, Seriali
    */
   private boolean sanityCheck(
       IpSpaceToBDD ipSpaceToBDD, Map<String, Configuration> configurations) {
+    LOGGER.info("Beginning sanity check");
     // Sanity check internal properties.
     assertAllInterfacesActiveNodeInterface(_arpReplies, configurations);
     assertAllInterfacesActiveNodeVrfInterface(_arpFalse, configurations);
@@ -1545,7 +1549,37 @@ public final class ForwardingAnalysisImpl implements ForwardingAnalysis, Seriali
     Map<String, Map<String, Map<String, IpSpace>>> union3 = union(union2, getExitsNetwork());
     assertDeepIpSpaceEquality(unionOthers, union3, ipSpaceToBDD);
     assertDeepIpSpaceEquality(_arpFalse, unionOthers, ipSpaceToBDD);
-
+    // node -> vrf -> interface -> ips for which arp true on any edge
+    Map<String, Map<String, Map<String, IpSpace>>> arpTrueInterface =
+        toImmutableMap(
+            _arpTrueEdge,
+            Entry::getKey,
+            nodeEntry ->
+                toImmutableMap(
+                    nodeEntry.getValue(),
+                    Entry::getKey,
+                    edgeEntry -> {
+                      Map<Edge, IpSpace> edgeMap = edgeEntry.getValue();
+                      return edgeMap.entrySet().stream()
+                          .collect(
+                              ImmutableMap.toImmutableMap(
+                                  e -> e.getKey().getInt1(), Entry::getValue, AclIpSpace::union));
+                    }));
+    Map<String, Map<String, Map<String, IpSpace>>> arpTrueInterfaceNegated =
+        toImmutableMap(
+            arpTrueInterface,
+            Entry::getKey,
+            nodeEntry ->
+                toImmutableMap(
+                    nodeEntry.getValue(),
+                    Entry::getKey,
+                    vrfEntry ->
+                        toImmutableMap(
+                            vrfEntry.getValue(),
+                            Entry::getKey,
+                            ifaceEntry -> ifaceEntry.getValue().complement())));
+    assertDeepIpSpaceEquality(arpTrueInterfaceNegated, _arpFalse, ipSpaceToBDD);
+    LOGGER.info("Done with sanity checks");
     return true;
   }
 
