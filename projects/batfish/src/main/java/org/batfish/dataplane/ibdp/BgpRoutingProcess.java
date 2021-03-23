@@ -46,6 +46,7 @@ import org.apache.logging.log4j.Logger;
 import org.batfish.datamodel.AbstractRoute;
 import org.batfish.datamodel.AbstractRouteDecorator;
 import org.batfish.datamodel.AnnotatedRoute;
+import org.batfish.datamodel.BgpActivePeerConfig;
 import org.batfish.datamodel.BgpAdvertisement;
 import org.batfish.datamodel.BgpAdvertisement.BgpAdvertisementType;
 import org.batfish.datamodel.BgpPeerConfig;
@@ -53,6 +54,7 @@ import org.batfish.datamodel.BgpPeerConfigId;
 import org.batfish.datamodel.BgpProcess;
 import org.batfish.datamodel.BgpRoute;
 import org.batfish.datamodel.BgpSessionProperties;
+import org.batfish.datamodel.BgpSessionProperties.SessionType;
 import org.batfish.datamodel.BgpTieBreaker;
 import org.batfish.datamodel.Bgpv4Route;
 import org.batfish.datamodel.Configuration;
@@ -74,6 +76,7 @@ import org.batfish.datamodel.bgp.AddressFamily;
 import org.batfish.datamodel.bgp.AddressFamily.Type;
 import org.batfish.datamodel.bgp.BgpTopology;
 import org.batfish.datamodel.bgp.BgpTopology.EdgeId;
+import org.batfish.datamodel.bgp.BgpTopologyUtils.ConfedSessionType;
 import org.batfish.datamodel.bgp.RouteDistinguisher;
 import org.batfish.datamodel.bgp.community.ExtendedCommunity;
 import org.batfish.datamodel.dataplane.rib.RibGroup;
@@ -756,9 +759,8 @@ final class BgpRoutingProcess implements RoutingProcess<BgpTopology, BgpRoute<?,
     // Setup helper vars
     BgpPeerConfigId remoteConfigId = edgeId.tail();
     BgpPeerConfigId ourConfigId = edgeId.head();
-    BgpSessionProperties sessionProperties =
-        getBgpSessionProperties(bgpTopology, new EdgeId(remoteConfigId, ourConfigId));
-    BgpPeerConfig ourBgpConfig = requireNonNull(nc.getBgpPeerConfig(edgeId.head()));
+    BgpSessionProperties sessionProperties = getBgpSessionProperties(bgpTopology, edgeId);
+    BgpPeerConfig ourBgpConfig = requireNonNull(nc.getBgpPeerConfig(ourConfigId));
     assert ourBgpConfig.getIpv4UnicastAddressFamily() != null;
     // sessionProperties represents the incoming edge, so its tailIp is the remote peer's IP
     boolean useRibGroups =
@@ -1465,12 +1467,43 @@ final class BgpRoutingProcess implements RoutingProcess<BgpTopology, BgpRoute<?,
     Ip srcIp = advert.getSrcIp();
     // TODO: support passive and unnumbered bgp connections
     Prefix srcPrefix = srcIp.toPrefix();
-    BgpPeerConfig neighbor = _process.getActiveNeighbors().get(srcPrefix);
-    assert neighbor != null; // invariant of being processed
+    BgpActivePeerConfig neighbor = _process.getActiveNeighbors().get(srcPrefix);
+    if (neighbor == null) {
+      LOGGER.warn("Skipping advertisement from unconfigured neighbor with remote-ip {}", srcIp);
+      return;
+    } else if (neighbor.getPeerAddress() == null) {
+      LOGGER.warn("Skipping advertisement from neighbor {} missing peer address", srcIp);
+      return;
+    } else if (!neighbor.getRemoteAsns().isEmpty()) {
+      LOGGER.warn("Skipping advertisement from neighbor {} with no remote AS", srcIp);
+      return;
+    } else if (!neighbor.getRemoteAsns().isSingleton()) {
+      LOGGER.warn("Skipping advertisement from neighbor {} without single remote AS", srcIp);
+      return;
+    } else if (neighbor.getLocalAs() == null) {
+      LOGGER.warn("Skipping advertisement from neighbor {} missing local AS", srcIp);
+      return;
+    } else if (neighbor.getLocalIp() == null) {
+      LOGGER.warn("Skipping advertisement from neighbor {} missing local IP", srcIp);
+      return;
+    }
 
     // Build a route based on the type of this advertisement
     BgpAdvertisementType type = advert.getType();
     boolean ebgp = type.isEbgp();
+
+    long remoteAsn = neighbor.getRemoteAsns().singletonValue();
+    long localAsn = neighbor.getLocalAs();
+    BgpSessionProperties sessionProperties =
+        BgpSessionProperties.builder()
+            .setConfedSessionType(ConfedSessionType.NO_CONFED) // TODO: support?
+            .setAddressFamilies(ImmutableSet.of(Type.IPV4_UNICAST)) // TODO: support more than this?
+            .setHeadAs(remoteAsn)
+            .setHeadIp(neighbor.getPeerAddress())
+            .setTailAs(localAsn)
+            .setTailIp(neighbor.getLocalIp())
+            .setSessionType(ebgp ? SessionType.EBGP_SINGLEHOP : SessionType.IBGP)
+            .build();
 
     Bgpv4Rib targetRib = ebgp ? _ebgpv4Rib : _ibgpv4Rib;
     RoutingProtocol targetProtocol = ebgp ? RoutingProtocol.BGP : RoutingProtocol.IBGP;
@@ -1556,7 +1589,8 @@ final class BgpRoutingProcess implements RoutingProcess<BgpTopology, BgpRoute<?,
         if (importPolicy != null) {
           // TODO Figure out whether transformedOutgoingRoute ought to have an annotation
           acceptIncoming =
-              importPolicy.process(transformedOutgoingRoute, transformedIncomingRouteBuilder, IN);
+              importPolicy.processBgpRoute(
+                  transformedOutgoingRoute, transformedIncomingRouteBuilder, sessionProperties, IN);
         }
       }
       if (acceptIncoming) {
