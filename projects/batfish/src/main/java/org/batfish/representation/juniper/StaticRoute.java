@@ -29,6 +29,8 @@ public class StaticRoute implements Serializable {
 
   private Ip _nextHopIp;
 
+  @Nullable private String _nextTable;
+
   private List<String> _policies;
 
   private Prefix _prefix;
@@ -76,6 +78,14 @@ public class StaticRoute implements Serializable {
 
   public Ip getNextHopIp() {
     return _nextHopIp;
+  }
+
+  public @Nullable String getNextTable() {
+    return _nextTable;
+  }
+
+  public void setNextTable(@Nullable String nextTable) {
+    _nextTable = nextTable;
   }
 
   @Nullable

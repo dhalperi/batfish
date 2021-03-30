@@ -19,6 +19,7 @@ import static org.batfish.representation.juniper.RoutingInstance.OSPF_INTERNAL_S
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicates;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -2461,8 +2462,13 @@ public final class JuniperConfiguration extends VendorConfiguration {
   private IpsecPeerConfig toIpsecPeerConfig(IpsecVpn ipsecVpn) {
     IpsecStaticPeerConfig.Builder ipsecStaticConfigBuilder = IpsecStaticPeerConfig.builder();
     ipsecStaticConfigBuilder.setTunnelInterface(ipsecVpn.getBindInterface());
-    IkeGateway ikeGateway = _masterLogicalSystem.getIkeGateways().get(ipsecVpn.getGateway());
 
+    if (Strings.isNullOrEmpty(ipsecVpn.getGateway())) {
+      _w.redFlag(String.format("No IKE gateway configured for ipsec vpn %s", ipsecVpn.getName()));
+      return null;
+    }
+
+    IkeGateway ikeGateway = _masterLogicalSystem.getIkeGateways().get(ipsecVpn.getGateway());
     if (ikeGateway == null) {
       _w.redFlag(
           String.format(
@@ -2470,20 +2476,36 @@ public final class JuniperConfiguration extends VendorConfiguration {
               ipsecVpn.getGateway(), ipsecVpn.getName()));
       return null;
     }
+
     ipsecStaticConfigBuilder.setDestinationAddress(ikeGateway.getAddress());
 
     String externalIfaceName = ikeGateway.getExternalInterface();
     String masterIfaceName = interfaceUnitMasterName(externalIfaceName);
 
-    Interface externalIface =
-        _masterLogicalSystem.getInterfaces().get(masterIfaceName).getUnits().get(externalIfaceName);
+    Interface masterExternalIface = _masterLogicalSystem.getInterfaces().get(masterIfaceName);
+    if (masterExternalIface == null) {
+      _w.redFlag(
+          String.format(
+              "Cannot find external interface %s for IKE gateway %s for ipsec vpn %s",
+              externalIfaceName, ipsecVpn.getGateway(), ipsecVpn.getName()));
+      return null;
+    }
+
+    Interface externalIface = masterExternalIface.getUnits().get(externalIfaceName);
+    if (externalIface == null) {
+      _w.redFlag(
+          String.format(
+              "Cannot find external interface %s for IKE gateway %s for ipsec vpn %s",
+              externalIfaceName, ipsecVpn.getGateway(), ipsecVpn.getName()));
+      return null;
+    }
 
     ipsecStaticConfigBuilder.setSourceInterface(externalIfaceName);
 
     Ip localAddress = null;
     if (ikeGateway.getLocalAddress() != null) {
       localAddress = ikeGateway.getLocalAddress();
-    } else if (externalIface != null && externalIface.getPrimaryAddress() != null) {
+    } else if (externalIface.getPrimaryAddress() != null) {
       localAddress = externalIface.getPrimaryAddress().getIp();
     }
     if (localAddress == null || !localAddress.valid()) {
@@ -2936,10 +2958,15 @@ public final class JuniperConfiguration extends VendorConfiguration {
   private Set<org.batfish.datamodel.StaticRoute> toStaticRoutes(StaticRoute route) {
     ImmutableSet.Builder<org.batfish.datamodel.StaticRoute> viStaticRoutes = ImmutableSet.builder();
 
+    if (route.getNextTable() != null) {
+      // TODO: and remove extraction warning.
+      return ImmutableSet.of();
+    }
+
     // static route corresponding to the next hop
-    Boolean noInstall = firstNonNull(route.getNoInstall(), Boolean.FALSE);
+    boolean noInstall = firstNonNull(route.getNoInstall(), Boolean.FALSE);
     // TOOD: return routing-instance-level default setting instead of false
-    Boolean resolve = firstNonNull(route.getResolve(), Boolean.FALSE);
+    boolean resolve = firstNonNull(route.getResolve(), Boolean.FALSE);
     viStaticRoutes.add(
         org.batfish.datamodel.StaticRoute.builder()
             .setNetwork(route.getPrefix())
@@ -3994,10 +4021,15 @@ public final class JuniperConfiguration extends VendorConfiguration {
     newZone.setInboundInterfaceFiltersNames(new TreeMap<>());
     for (Entry<String, ConcreteFirewallFilter> e : zone.getInboundInterfaceFilters().entrySet()) {
       String inboundInterfaceName = e.getKey();
+      if (!_c.getAllInterfaces().containsKey(inboundInterfaceName)) {
+        // undefined reference
+        continue;
+      }
       FirewallFilter inboundInterfaceFilter = e.getValue();
       String inboundInterfaceFilterName = inboundInterfaceFilter.getName();
-      org.batfish.datamodel.Interface newIface = _c.getAllInterfaces().get(inboundInterfaceName);
-      newZone.getInboundInterfaceFiltersNames().put(newIface.getName(), inboundInterfaceFilterName);
+      newZone
+          .getInboundInterfaceFiltersNames()
+          .put(inboundInterfaceName, inboundInterfaceFilterName);
     }
 
     newZone.setToZonePoliciesNames(new TreeMap<>());
