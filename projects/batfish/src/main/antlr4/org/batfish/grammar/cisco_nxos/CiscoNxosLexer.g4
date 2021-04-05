@@ -319,7 +319,15 @@ CHANNEL_GROUP: 'channel-group';
 
 CHARGEN: 'chargen';
 
+CIELINKDOWN: 'cieLinkDown';
+
+CIELINKUP: 'cieLinkUp';
+
 CIR: 'cir';
+
+CISCO_XCVR_MON_STATUS_CHG: 'cisco-xcvr-mon-status-chg';
+
+CISCOFEATOPSTATUSCHANGE: 'ciscoFeatOpStatusChange';
 
 CLASS
 :
@@ -709,6 +717,10 @@ EXPORTER
 EXTEND: 'extend';
 
 EXTENDED: 'extended';
+
+EXTENDED_LINKDOWN: 'extended-linkDown';
+
+EXTENDED_LINKUP: 'extended-linkUp';
 
 EXTERNAL: 'external';
 
@@ -1121,6 +1133,10 @@ LINE: 'line';
 LINE_PROTOCOL: 'line-protocol';
 
 LINK: 'link';
+
+LINKDOWN: 'linkDown';
+
+LINKUP: 'linkUp';
 
 LINK_FLAP: 'link-flap';
 
