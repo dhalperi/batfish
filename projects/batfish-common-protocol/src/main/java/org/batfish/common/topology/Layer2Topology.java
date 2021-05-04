@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -116,6 +117,13 @@ public final class Layer2Topology {
 
   private Layer2Topology(Map<Layer2Node, Layer2Node> representativeByNode) {
     _representativeByNode = ImmutableMap.copyOf(representativeByNode);
+    ImmutableListMultimap<Layer2Node, Layer2Node> x =
+        _representativeByNode.entrySet().stream()
+            .collect(
+                ImmutableListMultimap
+                    .<Entry<Layer2Node, Layer2Node>, Layer2Node, Layer2Node>toImmutableListMultimap(
+                        Entry::getValue, Entry::getKey));
+    System.err.println(x.asMap().values());
   }
 
   public static @Nonnull Layer2Topology fromDomains(Collection<Set<Layer2Node>> domains) {

@@ -119,27 +119,17 @@ public final class TopologyUtil {
     } else if (trunkWithNativeVlanAllowed(i1)) {
       // i1 is a trunk, but the other side is not and does not use tags. The only edge that will
       // come up is i2 receiving untagged packets.
-      Integer node2VlanId =
-          i2.getSwitchportMode() == SwitchportMode.ACCESS ? i2.getAccessVlan() : null;
       assert i1.getNativeVlan() != null; // invariant of trunkWithNativeVlanAllowed
-      edges.accept(
-          new Layer2Edge(
-              node1,
-              node1Ranges.getRange(i1.getNativeVlan()),
-              node2,
-              node2VlanId == null ? null : node2Ranges.getRange(node2VlanId)));
+      if (i2.getSwitchportMode() == SwitchportMode.ACCESS && i2.getAccessVlan() != null) {
+        edges.accept(new Layer2Edge(node1, null, node2, null));
+      }
     } else if (trunkWithNativeVlanAllowed(i2)) {
       // i1 is not a trunk and does not use tags, but the other side is a trunk. The only edge that
       // will come up is the other side receiving untagged packets and treating them as native VLAN.
-      Integer node1VlanId =
-          i1.getSwitchportMode() == SwitchportMode.ACCESS ? i1.getAccessVlan() : null;
       assert i2.getNativeVlan() != null; // invariant of trunkWithNativeVlanAllowed
-      edges.accept(
-          new Layer2Edge(
-              node1,
-              node1VlanId == null ? null : node1Ranges.getRange(node1VlanId),
-              node2,
-              node2Ranges.getRange(i2.getNativeVlan())));
+      if (i1.getSwitchportMode() == SwitchportMode.ACCESS && i1.getAccessVlan() != null) {
+        edges.accept(new Layer2Edge(node1, null, node2, null));
+      }
     }
   }
 
