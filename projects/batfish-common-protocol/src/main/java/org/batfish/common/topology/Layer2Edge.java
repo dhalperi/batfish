@@ -1,10 +1,12 @@
 package org.batfish.common.topology;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.BoundType;
 import com.google.common.collect.Range;
 import java.util.Objects;
 import javax.annotation.Nonnull;
@@ -36,7 +38,30 @@ public final class Layer2Edge {
         new Layer2Node(node1, node1SwitchportVlanId), new Layer2Node(node2, node2SwitchportVlanId));
   }
 
+  private static int size(@Nonnull Layer2Node node) {
+    return size(node.getSwitchportVlanRange());
+  }
+
+  private static int size(@Nullable Range<Integer> range) {
+    if (range == null) {
+      // An untagged packet.
+      return 1;
+    }
+    assert range.hasLowerBound();
+    assert range.lowerBoundType() == BoundType.CLOSED;
+    assert range.hasUpperBound();
+    assert range.upperBoundType() == BoundType.OPEN;
+    return range.upperEndpoint() - range.lowerEndpoint();
+  }
+
   public Layer2Edge(@Nonnull Layer2Node node1, @Nonnull Layer2Node node2) {
+    checkArgument(
+        size(node1) == size(node2),
+        "incompatible vlan ranges: %s (size %s) and %s (size %s)",
+        node1,
+        size(node1),
+        node2,
+        size(node2));
     _node1 = node1;
     _node2 = node2;
   }

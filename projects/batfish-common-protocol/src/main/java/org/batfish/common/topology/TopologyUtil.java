@@ -108,13 +108,13 @@ public final class TopologyUtil {
       // i1 is a tagged layer-3 interface, and the other side is a trunk. The only possible edge is
       // i2 receiving frames for a non-native allowed vlan.
       if (!i1Tag.equals(i2.getNativeVlan()) && i2.getAllowedVlans().contains(i1Tag)) {
-        edges.accept(new Layer2Edge(node1, null, node2, node2Ranges.getRange(i1Tag)));
+        edges.accept(new Layer2Edge(node1, Range.singleton(i1Tag), node2, Range.singleton(i1Tag)));
       }
     } else if (i2Tag != null) {
       // i1 is a trunk, and the other side is a tagged layer-3 interface. The only possible edge is
       // i2 receiving frames for from a non-native allowed vlan of i1.
       if (!i2Tag.equals(i1.getNativeVlan()) && i1.getAllowedVlans().contains(i2Tag)) {
-        edges.accept(new Layer2Edge(node1, node1Ranges.getRange(i2Tag), node2, null));
+        edges.accept(new Layer2Edge(node1, Range.singleton(i2Tag), node2, Range.singleton(i2Tag)));
       }
     } else if (trunkWithNativeVlanAllowed(i1)) {
       // i1 is a trunk, but the other side is not and does not use tags. The only edge that will
