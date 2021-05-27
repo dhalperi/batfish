@@ -2,29 +2,24 @@ package org.batfish.datamodel;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.base.MoreObjects;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import java.io.ObjectStreamException;
 import org.batfish.datamodel.visitors.GenericIpSpaceVisitor;
 
 public class IpIpSpace extends IpSpace {
-  // Soft values: let it be garbage collected in times of pressure.
   // Maximum size 2^20: Just some upper bound on cache size, well less than GiB.
   //   (12 bytes seems smallest possible entry (long + int), would be 12 MiB total).
   private static final LoadingCache<Ip, IpIpSpace> CACHE =
-      CacheBuilder.newBuilder()
-          .softValues()
-          .maximumSize(1 << 20)
-          .build(CacheLoader.from(IpIpSpace::new));
+      Caffeine.newBuilder().softValues().maximumSize(1 << 20).build(IpIpSpace::new);
   private static final String PROP_IP = "ip";
 
   private final Ip _ip;
 
   @JsonCreator
   static IpIpSpace create(@JsonProperty(PROP_IP) Ip ip) {
-    return CACHE.getUnchecked(ip);
+    return CACHE.get(ip);
   }
 
   private IpIpSpace(Ip ip) {
@@ -63,6 +58,6 @@ public class IpIpSpace extends IpSpace {
 
   /** Cache after deserialization. */
   private Object readResolve() throws ObjectStreamException {
-    return CACHE.getUnchecked(_ip);
+    return CACHE.get(_ip);
   }
 }

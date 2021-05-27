@@ -2,10 +2,10 @@ package org.batfish.datamodel.route.nh;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.base.MoreObjects;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import java.io.ObjectStreamException;
 import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -22,11 +22,10 @@ import org.batfish.datamodel.Route;
  */
 public final class NextHopInterface implements NextHop {
 
-  // Soft values: let it be garbage collected in times of pressure.
   // Maximum size 2^20: Just some upper bound on cache size, well less than GiB.
   //   (8 bytes seems smallest possible entry (long), would be 8 MiB total).
   private static final LoadingCache<NextHopInterface, NextHopInterface> CACHE =
-      CacheBuilder.newBuilder().softValues().maximumSize(1 << 20).build(CacheLoader.from(x -> x));
+      Caffeine.newBuilder().maximumSize(1 << 20).build(x -> x);
 
   /** The interface name to which the traffic should be routed */
   @Nonnull
@@ -49,7 +48,7 @@ public final class NextHopInterface implements NextHop {
    */
   @Nonnull
   public static NextHopInterface of(String interfaceName) {
-    return CACHE.getUnchecked(new NextHopInterface(interfaceName, null));
+    return CACHE.get(new NextHopInterface(interfaceName, null));
   }
 
   /**
@@ -62,7 +61,7 @@ public final class NextHopInterface implements NextHop {
    */
   @Nonnull
   public static NextHopInterface of(String interfaceName, Ip ip) {
-    return CACHE.getUnchecked(new NextHopInterface(interfaceName, ip));
+    return CACHE.get(new NextHopInterface(interfaceName, ip));
   }
 
   @Override
@@ -114,5 +113,10 @@ public final class NextHopInterface implements NextHop {
         ip);
     _interfaceName = interfaceName;
     _ip = ip;
+  }
+
+  /** Cache after deserialization. */
+  private Object readResolve() throws ObjectStreamException {
+    return CACHE.get(this);
   }
 }

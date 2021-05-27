@@ -4,9 +4,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+import java.io.ObjectStreamException;
 import java.io.Serializable;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -20,7 +20,7 @@ public final class NodeInterfacePair implements Serializable, Comparable<NodeInt
   // Maximum size 2^18: Just some upper bound on cache size, well less than GiB.
   //   (~40 bytes reasonable entry size: 12+12+pointers, would be 10 MiB total).
   private static final LoadingCache<NodeInterfacePair, NodeInterfacePair> CACHE =
-      CacheBuilder.newBuilder().softValues().maximumSize(1 << 18).build(CacheLoader.from(x -> x));
+      Caffeine.newBuilder().softValues().maximumSize(1 << 18).build(x -> x);
 
   private static final String PROP_HOSTNAME = "hostname";
   private static final String PROP_INTERFACE = "interface";
@@ -38,7 +38,7 @@ public final class NodeInterfacePair implements Serializable, Comparable<NodeInt
   }
 
   public static NodeInterfacePair of(String hostname, String interfaceName) {
-    return CACHE.getUnchecked(new NodeInterfacePair(hostname, interfaceName));
+    return CACHE.get(new NodeInterfacePair(hostname, interfaceName));
   }
 
   public static NodeInterfacePair of(Interface iface) {
@@ -89,5 +89,10 @@ public final class NodeInterfacePair implements Serializable, Comparable<NodeInt
   public int compareTo(NodeInterfacePair other) {
     int hostCmp = _hostname.compareTo(other._hostname);
     return hostCmp != 0 ? hostCmp : _interfaceName.compareTo(other._interfaceName);
+  }
+
+  /** Cache after deserialization. */
+  private Object readResolve() throws ObjectStreamException {
+    return CACHE.get(this);
   }
 }

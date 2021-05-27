@@ -4,9 +4,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.util.Optional;
@@ -16,11 +15,10 @@ import javax.annotation.Nullable;
 /** An IPv4 address */
 public class Ip implements Comparable<Ip>, Serializable {
 
-  // Soft values: let it be garbage collected in times of pressure.
   // Maximum size 2^20: Just some upper bound on cache size, well less than GiB.
   //   (8 bytes seems smallest possible entry (long), would be 8 MiB total).
   private static final LoadingCache<Ip, Ip> CACHE =
-      CacheBuilder.newBuilder().softValues().maximumSize(1 << 20).build(CacheLoader.from(x -> x));
+      Caffeine.newBuilder().maximumSize(1 << 20).build(x -> x);
 
   public static final Ip AUTO = create(-1L);
 
@@ -133,7 +131,7 @@ public class Ip implements Comparable<Ip>, Serializable {
   public static Ip create(long ipAsLong) {
     checkArgument(ipAsLong <= 0xFFFFFFFFL, "Invalid IP value: %s", ipAsLong);
     Ip ip = new Ip(ipAsLong);
-    return CACHE.getUnchecked(ip);
+    return CACHE.get(ip);
   }
 
   public long asLong() {
@@ -257,6 +255,6 @@ public class Ip implements Comparable<Ip>, Serializable {
 
   /** Cache after deserialization. */
   private Object readResolve() throws ObjectStreamException {
-    return CACHE.getUnchecked(this);
+    return CACHE.get(this);
   }
 }
