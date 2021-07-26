@@ -33,6 +33,7 @@ public final class TopologyContext implements TopologyContainer {
     private @Nonnull L3Adjacencies _l3Adjacencies;
     private @Nonnull OspfTopology _ospfTopology;
     private @Nonnull Optional<Layer1Topology> _rawLayer1PhysicalTopology;
+    private @Nonnull Optional<Layer1Topology> _synthesizedLayer1PhysicalTopology;
     @Nonnull private TunnelTopology _tunnelTopology;
     private @Nonnull VxlanTopology _vxlanTopology;
 
@@ -47,6 +48,7 @@ public final class TopologyContext implements TopologyContainer {
           _l3Adjacencies,
           _ospfTopology,
           _rawLayer1PhysicalTopology,
+          _synthesizedLayer1PhysicalTopology,
           _tunnelTopology,
           _vxlanTopology);
     }
@@ -61,6 +63,7 @@ public final class TopologyContext implements TopologyContainer {
       _l3Adjacencies = GlobalBroadcastNoPointToPoint.instance();
       _ospfTopology = OspfTopology.EMPTY;
       _rawLayer1PhysicalTopology = Optional.empty();
+      _synthesizedLayer1PhysicalTopology = Optional.empty();
       _tunnelTopology = TunnelTopology.EMPTY;
       _vxlanTopology = VxlanTopology.EMPTY;
     }
@@ -112,6 +115,12 @@ public final class TopologyContext implements TopologyContainer {
       return this;
     }
 
+    public @Nonnull Builder setSynthesizedLayer1PhysicalTopology(
+        Optional<Layer1Topology> synthesizedLayer1PhysicalTopology) {
+      _synthesizedLayer1PhysicalTopology = synthesizedLayer1PhysicalTopology;
+      return this;
+    }
+
     public Builder setTunnelTopology(TunnelTopology tunnelTopology) {
       _tunnelTopology = tunnelTopology;
       return this;
@@ -136,6 +145,7 @@ public final class TopologyContext implements TopologyContainer {
   private final @Nonnull L3Adjacencies _l3Adjacencies;
   private final @Nonnull OspfTopology _ospfTopology;
   private final @Nonnull Optional<Layer1Topology> _rawLayer1PhysicalTopology;
+  private final @Nonnull Optional<Layer1Topology> _synthesizedLayer1PhysicalTopology;
   @Nonnull private final TunnelTopology _tunnelTopology;
   private final @Nonnull VxlanTopology _vxlanTopology;
 
@@ -149,6 +159,7 @@ public final class TopologyContext implements TopologyContainer {
       L3Adjacencies l3Adjacencies,
       OspfTopology ospfTopology,
       Optional<Layer1Topology> rawLayer1PhysicalTopology,
+      Optional<Layer1Topology> synthesizedLayer1PhysicalTopology,
       TunnelTopology tunnelTopology,
       VxlanTopology vxlanTopology) {
     _bgpTopology = bgpTopology;
@@ -160,6 +171,7 @@ public final class TopologyContext implements TopologyContainer {
     _l3Adjacencies = l3Adjacencies;
     _ospfTopology = ospfTopology;
     _rawLayer1PhysicalTopology = rawLayer1PhysicalTopology;
+    _synthesizedLayer1PhysicalTopology = synthesizedLayer1PhysicalTopology;
     _vxlanTopology = vxlanTopology;
     _tunnelTopology = tunnelTopology;
   }
@@ -206,6 +218,10 @@ public final class TopologyContext implements TopologyContainer {
     return _rawLayer1PhysicalTopology;
   }
 
+  public @Nonnull Optional<Layer1Topology> getSynthesizedLayer1PhysicalTopology() {
+    return _synthesizedLayer1PhysicalTopology;
+  }
+
   @Override
   public @Nonnull VxlanTopology getVxlanTopology() {
     return _vxlanTopology;
@@ -235,6 +251,7 @@ public final class TopologyContext implements TopologyContainer {
         && _l3Adjacencies.equals(rhs._l3Adjacencies)
         && _ospfTopology.equals(rhs._ospfTopology)
         && _rawLayer1PhysicalTopology.equals(rhs._rawLayer1PhysicalTopology)
+        && _synthesizedLayer1PhysicalTopology.equals(rhs._synthesizedLayer1PhysicalTopology)
         && _tunnelTopology.equals(rhs._tunnelTopology)
         && _vxlanTopology.equals(rhs._vxlanTopology);
   }
@@ -251,6 +268,7 @@ public final class TopologyContext implements TopologyContainer {
         _l3Adjacencies,
         _ospfTopology,
         _rawLayer1PhysicalTopology,
+        _synthesizedLayer1PhysicalTopology,
         _tunnelTopology,
         _vxlanTopology);
   }
@@ -266,6 +284,7 @@ public final class TopologyContext implements TopologyContainer {
         .setL3Adjacencies(_l3Adjacencies)
         .setOspfTopology(_ospfTopology)
         .setRawLayer1PhysicalTopology(_rawLayer1PhysicalTopology)
+        .setSynthesizedLayer1PhysicalTopology(_synthesizedLayer1PhysicalTopology)
         .setTunnelTopology(_tunnelTopology)
         .setVxlanTopology(_vxlanTopology);
   }

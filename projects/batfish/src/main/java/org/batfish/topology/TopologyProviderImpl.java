@@ -304,7 +304,8 @@ public final class TopologyProviderImpl implements TopologyProvider {
       assert scope != null; // avoid unused warning
       if (L3Adjacencies.USE_NEW_METHOD) {
         return BroadcastL3Adjacencies.create(
-            getLayer1LogicalTopology(networkSnapshot).orElse(Layer1Topology.EMPTY),
+            getRawLayer1PhysicalTopology(networkSnapshot).orElse(Layer1Topology.EMPTY),
+            getSynthesizedLayer1Topology(networkSnapshot).orElse(Layer1Topology.EMPTY),
             VxlanTopology.EMPTY,
             _batfish.loadConfigurations(networkSnapshot));
       }

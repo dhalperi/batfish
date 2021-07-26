@@ -45,6 +45,8 @@ public final class IncrementalDataPlanePlugin extends DataPlanePlugin {
             .setL3Adjacencies(topologyProvider.getInitialL3Adjacencies(snapshot))
             .setOspfTopology(topologyProvider.getInitialOspfTopology(snapshot))
             .setRawLayer1PhysicalTopology(topologyProvider.getRawLayer1PhysicalTopology(snapshot))
+            .setSynthesizedLayer1PhysicalTopology(
+                topologyProvider.getSynthesizedLayer1Topology(snapshot))
             .setTunnelTopology(topologyProvider.getInitialTunnelTopology(snapshot))
             .build();
 

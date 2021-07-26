@@ -52,6 +52,7 @@ public class BroadcastL3AdjacenciesTest {
       BroadcastL3Adjacencies adjacencies =
           BroadcastL3Adjacencies.create(
               Layer1Topology.EMPTY,
+              Layer1Topology.EMPTY,
               VxlanTopology.EMPTY,
               ImmutableMap.of(c1.getHostname(), c1, c2.getHostname(), c2, c3.getHostname(), c3));
       assertTrue(adjacencies.inSameBroadcastDomain(n1, n2));
@@ -69,6 +70,7 @@ public class BroadcastL3AdjacenciesTest {
               new Layer1Topology(
                   new Layer1Edge(
                       n1.getHostname(), n1.getInterface(), n3.getHostname(), n3.getInterface())),
+              Layer1Topology.EMPTY,
               VxlanTopology.EMPTY,
               ImmutableMap.of(c1.getHostname(), c1, c2.getHostname(), c2, c3.getHostname(), c3));
       assertTrue(adjacencies.inSameBroadcastDomain(n1, n3));
@@ -85,6 +87,7 @@ public class BroadcastL3AdjacenciesTest {
       i1.setEncapsulationVlan(4);
       BroadcastL3Adjacencies adjacencies =
           BroadcastL3Adjacencies.create(
+              Layer1Topology.EMPTY,
               Layer1Topology.EMPTY,
               VxlanTopology.EMPTY,
               ImmutableMap.of(c1.getHostname(), c1, c2.getHostname(), c2, c3.getHostname(), c3));

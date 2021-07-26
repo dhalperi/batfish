@@ -160,7 +160,10 @@ final class IncrementalBdpEngine {
       if (L3Adjacencies.USE_NEW_METHOD) {
         newAdjacencies =
             BroadcastL3Adjacencies.create(
-                initialTopologyContext.getLayer1LogicalTopology().orElse(Layer1Topology.EMPTY),
+                initialTopologyContext.getRawLayer1PhysicalTopology().orElse(Layer1Topology.EMPTY),
+                initialTopologyContext
+                    .getSynthesizedLayer1PhysicalTopology()
+                    .orElse(Layer1Topology.EMPTY),
                 newVxlanTopology,
                 configurations);
       } else {

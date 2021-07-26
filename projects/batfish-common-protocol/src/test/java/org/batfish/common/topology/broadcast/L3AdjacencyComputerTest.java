@@ -737,6 +737,7 @@ public class L3AdjacencyComputerTest {
       L3AdjacencyComputer l3 =
           new L3AdjacencyComputer(
               ImmutableMap.of(c1.getHostname(), c1, c2.getHostname(), c2, c3.getHostname(), c3),
+              Layer1Topology.EMPTY,
               Layer1Topology.EMPTY);
       Map<NodeInterfacePair, Integer> domains = l3.findAllBroadcastDomains();
       assertThat("all interfaces have a domain", domains, aMapWithSize(3));
@@ -750,7 +751,8 @@ public class L3AdjacencyComputerTest {
               ImmutableMap.of(c1.getHostname(), c1, c2.getHostname(), c2, c3.getHostname(), c3),
               new Layer1Topology(
                   new Layer1Edge(
-                      n1.getHostname(), n1.getInterface(), n3.getHostname(), n3.getInterface())));
+                      n1.getHostname(), n1.getInterface(), n3.getHostname(), n3.getInterface())),
+              Layer1Topology.EMPTY);
       Map<NodeInterfacePair, Integer> domains = l3.findAllBroadcastDomains();
       assertThat("all interfaces have a domain", domains, aMapWithSize(3));
       assertThat("connected ifaces in same domain", domains.get(n1), equalTo(domains.get(n3)));
@@ -765,6 +767,7 @@ public class L3AdjacencyComputerTest {
       L3AdjacencyComputer l3 =
           new L3AdjacencyComputer(
               ImmutableMap.of(c1.getHostname(), c1, c2.getHostname(), c2, c3.getHostname(), c3),
+              Layer1Topology.EMPTY,
               Layer1Topology.EMPTY);
       Map<NodeInterfacePair, Integer> domains = l3.findAllBroadcastDomains();
       assertThat("all interfaces have a domain", domains, aMapWithSize(3));

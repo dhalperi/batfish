@@ -20,9 +20,12 @@ import org.batfish.datamodel.vxlan.VxlanTopology;
  */
 public class BroadcastL3Adjacencies implements L3Adjacencies {
   public static BroadcastL3Adjacencies create(
-      Layer1Topology l1, VxlanTopology vxlan, Map<String, Configuration> configs) {
+      Layer1Topology rawL1,
+      Layer1Topology synthesizedL1,
+      VxlanTopology vxlan,
+      Map<String, Configuration> configs) {
     assert vxlan != null; // suppress unused warning.
-    L3AdjacencyComputer adj = new L3AdjacencyComputer(configs, l1);
+    L3AdjacencyComputer adj = new L3AdjacencyComputer(configs, rawL1, synthesizedL1);
     return new BroadcastL3Adjacencies(adj.findAllBroadcastDomains());
   }
 

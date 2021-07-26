@@ -1,6 +1,5 @@
 package org.batfish.common.topology;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -12,6 +11,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import org.batfish.datamodel.Interface;
+import org.batfish.datamodel.Names;
 import org.batfish.datamodel.NetworkConfigurations;
 
 @ParametersAreNonnullByDefault
@@ -74,10 +74,8 @@ public final class Layer1Node implements Comparable<Layer1Node> {
 
   @Override
   public String toString() {
-    return toStringHelper(getClass())
-        .add(PROP_HOSTNAME, _hostname)
-        .add(PROP_INTERFACE_NAME, _interfaceName)
-        .toString();
+    return String.format(
+        "%s[%s]", Names.escapeNameIfNeeded(_hostname), Names.escapeNameIfNeeded(_interfaceName));
   }
 
   /**

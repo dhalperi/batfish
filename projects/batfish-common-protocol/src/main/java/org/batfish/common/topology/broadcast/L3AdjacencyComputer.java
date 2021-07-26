@@ -15,7 +15,9 @@ import java.util.TreeSet;
 import javax.annotation.Nonnull;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.batfish.common.topology.InterfaceUtil;
 import org.batfish.common.topology.Layer1Edge;
+import org.batfish.common.topology.Layer1Node;
 import org.batfish.common.topology.Layer1Topology;
 import org.batfish.datamodel.Configuration;
 import org.batfish.datamodel.Interface;
@@ -29,7 +31,8 @@ import org.jgrapht.alg.util.UnionFind;
 /** Computes the set of L3 interfaces that are in the same broadcast domain as a given interface. */
 public class L3AdjacencyComputer {
   private static final Logger LOGGER = LogManager.getLogger(L3AdjacencyComputer.class);
-  private final @Nonnull Layer1Topology _layer1Topology;
+  private final @Nonnull Layer1Topology _userProvidedLayer1Topology;
+  private final @Nonnull Layer1Topology _synthesizedLayer1Topology;
   private final @Nonnull Map<NodeInterfacePair, PhysicalInterface> _physicalInterfaces;
   private final @Nonnull Map<NodeInterfacePair, L3Interface> _layer3Interfaces;
 
@@ -42,13 +45,169 @@ public class L3AdjacencyComputer {
       EnumSet.of(InterfaceType.PHYSICAL, InterfaceType.AGGREGATED);
   @VisibleForTesting static final String BATFISH_GLOBAL_HUB = "Batfish Global Ethernet Hub";
 
-  public L3AdjacencyComputer(Map<String, Configuration> configs, Layer1Topology layer1Topology) {
-    _layer1Topology = layer1Topology;
+  public L3AdjacencyComputer(
+      Map<String, Configuration> configs,
+      Layer1Topology userProvidedLayer1Topology,
+      Layer1Topology synthesizedLayer1Topology) {
+    _userProvidedLayer1Topology = userProvidedLayer1Topology;
+    _synthesizedLayer1Topology = synthesizedLayer1Topology;
+    Layer1Topology combinedPhysicalTopology =
+        mergeAndCanonicalizeL1(_userProvidedLayer1Topology, _synthesizedLayer1Topology, configs);
+    Layer1Topology combinedLogicalTopology = toLogicalTopology(combinedPhysicalTopology, configs);
     _physicalInterfaces = computePhysicalInterfaces(configs);
-    _ethernetHubs = computeEthernetHubs(configs, _physicalInterfaces, _layer1Topology);
+    _ethernetHubs = computeEthernetHubs(configs, _physicalInterfaces, combinedLogicalTopology);
     _deviceBroadcastDomains = computeDeviceBroadcastDomains(configs, _physicalInterfaces);
     _layer3Interfaces =
         computeLayer3Interfaces(configs, _deviceBroadcastDomains, _physicalInterfaces);
+  }
+
+  /** A placeholder for an interface not in the network. */
+  private static final Layer1Node DEAD_END = new Layer1Node("~DEAD~", "~END~");
+
+  /**
+   * Ensures that the node referenced in the synthesized topology is present in the configurations.
+   *
+   * <p>If the node is invalid, it is replaced with {@link #DEAD_END}.
+   *
+   * <p>Uses {@code alreadyWarned} to prevent duplicate errors for devices or interfaces mentioned
+   * more than once in the topology.
+   */
+  private static @Nonnull Layer1Node canonicalize(
+      Layer1Node node, Map<String, Configuration> configs, Set<Object> alreadyWarned) {
+    Configuration c = configs.get(node.getHostname());
+    if (c == null) {
+      if (alreadyWarned.add(node.getHostname())) {
+        LOGGER.warn(
+            "Layer 1 topology has node {}, but device {} not found", node, node.getHostname());
+      }
+      return DEAD_END;
+    }
+
+    Optional<String> name =
+        InterfaceUtil.matchingInterfaceName(node.getInterfaceName(), c.getAllInterfaces().keySet());
+    if (!name.isPresent()) {
+      if (alreadyWarned.add(node)) {
+        LOGGER.warn(
+            "Layer 1 topology has node {}, but not able to match interface {} in {}",
+            node,
+            node.getInterfaceName(),
+            c.getAllInterfaces().keySet());
+      }
+      return DEAD_END;
+    }
+    return new Layer1Node(c.getHostname(), name.get());
+  }
+
+  /**
+   * Ensures that the node referenced in the synthesized topology is present in the configurations.
+   *
+   * <p>If the node is invalid, it is replaced with {@link #DEAD_END}.
+   *
+   * <p>Uses {@code alreadyWarned} to prevent duplicate errors for devices or interfaces mentioned
+   * more than once in the topology.
+   */
+  private static @Nonnull Layer1Node validateSynthesized(
+      Layer1Node node, Map<String, Configuration> configs, Set<Object> alreadyWarned) {
+    Configuration c = configs.get(node.getHostname());
+    if (c == null) {
+      if (alreadyWarned.add(node.getHostname())) {
+        LOGGER.error(
+            "Synthetic layer 1 topology generated invalid node {}: device {} not found",
+            node,
+            node.getHostname());
+      }
+      return DEAD_END;
+    }
+
+    if (!c.getAllInterfaces().containsKey(node.getInterfaceName())) {
+      if (alreadyWarned.add(node)) {
+        LOGGER.error(
+            "Synthetic layer 1 topology generated invalid node {}: interface {} not found in {}",
+            node,
+            node.getInterfaceName(),
+            c.getAllInterfaces().keySet());
+      }
+      return DEAD_END;
+    }
+    return node;
+  }
+
+  /**
+   * Provides a unified view over the user-provided and synthesized layer 1 topologies.
+   * User-provided edges are matched with existing interfaces as much as possible; synthesized edges
+   * are validated.
+   *
+   * <p>Note that this function does not delete any edges, or map into a logical Layer1Topology.
+   */
+  private static @Nonnull Layer1Topology mergeAndCanonicalizeL1(
+      Layer1Topology userProvidedLayer1Topology,
+      Layer1Topology synthesizedLayer1Topology,
+      Map<String, Configuration> configs) {
+    ImmutableSet.Builder<Layer1Edge> edges = ImmutableSet.builder();
+    Set<Object> warnings = new HashSet<>(); // dedupe multiple identical warnings
+    for (Layer1Edge e : userProvidedLayer1Topology.getGraph().edges()) {
+      edges.add(
+          new Layer1Edge(
+              canonicalize(e.getNode1(), configs, warnings),
+              canonicalize(e.getNode2(), configs, warnings)));
+    }
+    // Validate rather than canonicalize synthesized topology. This will provide better
+    // information for unexpected behavior.
+    Set<Object> synthWarnings = new HashSet<>(); // dedupe multiple identical warnings
+    for (Layer1Edge e : synthesizedLayer1Topology.getGraph().edges()) {
+      edges.add(
+          new Layer1Edge(
+              validateSynthesized(e.getNode1(), configs, synthWarnings),
+              validateSynthesized(e.getNode2(), configs, synthWarnings)));
+    }
+    return new Layer1Topology(edges.build());
+  }
+
+  private static @Nonnull Layer1Node toLogicalNode(
+      Layer1Node node, Map<String, Configuration> configs) {
+    Configuration c = configs.get(node.getHostname());
+    if (c == null) {
+      // No such device; already been warned on earlier.
+      return DEAD_END;
+    }
+    Interface iface = c.getAllInterfaces().get(node.getInterfaceName());
+    if (iface == null) {
+      // No such interface; already been warned on earlier.
+      return DEAD_END;
+    }
+    String aggregateName = iface.getChannelGroup();
+    if (aggregateName == null) {
+      // Not aggregated; return as-is.
+      return node;
+    }
+    Interface aggregate = c.getAllInterfaces().get(iface.getChannelGroup());
+    if (aggregate == null) {
+      // No such aggregate interface. Warn.
+      LOGGER.warn(
+          "Interface {} is marked as part of aggregated interface {} that is not found in {}",
+          node,
+          aggregateName,
+          c.getAllInterfaces().keySet());
+      return DEAD_END;
+    }
+    return new Layer1Node(c.getHostname(), aggregate.getName());
+  }
+
+  /**
+   * Basically {@link
+   * org.batfish.common.topology.TopologyUtil#computeLayer1LogicalTopology(Layer1Topology, Map)},
+   * but keeping invalid edges so we don't lose nodes.
+   */
+  private static @Nonnull Layer1Topology toLogicalTopology(
+      Layer1Topology layer1PhysicalTopology, Map<String, Configuration> configs) {
+    return new Layer1Topology(
+        layer1PhysicalTopology.getGraph().edges().stream()
+            .map(
+                edge ->
+                    new Layer1Edge(
+                        toLogicalNode(edge.getNode1(), configs),
+                        toLogicalNode(edge.getNode2(), configs)))
+            .collect(ImmutableSet.toImmutableSet()));
   }
 
   private static Map<String, DeviceBroadcastDomain> computeDeviceBroadcastDomains(
