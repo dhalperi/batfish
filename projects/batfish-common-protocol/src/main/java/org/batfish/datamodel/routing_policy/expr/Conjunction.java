@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,10 @@ public final class Conjunction extends BooleanExpr {
 
   public Conjunction() {
     this(new ArrayList<>());
+  }
+
+  public Conjunction(BooleanExpr... exprs) {
+    this(Arrays.asList(exprs));
   }
 
   @JsonCreator
