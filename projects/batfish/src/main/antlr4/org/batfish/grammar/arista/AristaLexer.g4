@@ -4324,7 +4324,7 @@ SUBJECT_NAME: 'subject-name';
 
 SUBMGMT: 'submgmt';
 
-SUBNET_MASK: 'subnet-mask';
+SUBNET_MASK_LITERAL: 'subnet-mask';
 
 SUB_OPTION: 'sub-option';
 

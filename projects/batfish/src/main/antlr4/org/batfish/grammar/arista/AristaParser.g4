@@ -470,7 +470,7 @@ dhcp_profile_null
       | HELPER_ADDRESS
       | LEASE
       | POOL
-      | SUBNET_MASK
+      | SUBNET_MASK_LITERAL
    ) null_rest_of_line
 ;
 
