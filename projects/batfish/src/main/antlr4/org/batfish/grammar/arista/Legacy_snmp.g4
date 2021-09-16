@@ -108,7 +108,7 @@ ss_file_transfer
 
 ss_host
 :
-   HOST (ip4 = IP_ADDRESS | ip6 = IPV6_ADDRESS | host = variable)
+   HOST (ip4 = ip_address | ip6 = IPV6_ADDRESS | host = variable)
      (VRF vrf = vrf_name)?
    (ss_host_informs | ss_host_traps)?
    ss_host_version?

@@ -38,7 +38,7 @@ pim_accept_rp
    ACCEPT_RP
    (
       AUTO_RP
-      | IP_ADDRESS
+      | ip_address
    )
    (
       name = variable
@@ -70,7 +70,7 @@ pim_null
 
 pim_rp_address
 :
-   RP_ADDRESS IP_ADDRESS
+   RP_ADDRESS ip_address
    (
       (
          ACCESS_LIST name = variable

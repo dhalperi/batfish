@@ -4,17 +4,25 @@ options {
    tokenVocab = AristaLexer;
 }
 
+// Basically an ip_prefix, but the IP should not be canonicalized.
 interface_address
 :
-  ip = IP_ADDRESS subnet = IP_ADDRESS
+  ip = ip_address subnet = SUBNET_MASK
   | prefix = IP_PREFIX
 ;
 
+// An IPv4 address
+ip_address: IP_ADDRESS | SUBNET_MASK;
+
+// An IPv4 prefix expressed as IP/LENGTH or IP MASK. IP will be canonicalized upon parsing.
 ip_prefix
 :
-  address = IP_ADDRESS mask = IP_ADDRESS
+  address = ip_address mask = SUBNET_MASK
   | prefix = IP_PREFIX
 ;
+
+// An IP with a wildcard against it.
+ip_wildcard: ip = ip_address wildcard = ip_address;
 
 ipv6_prefix
 :
@@ -23,7 +31,7 @@ ipv6_prefix
 
 ospf_area
 :
-  id_ip = IP_ADDRESS
+  id_ip = ip_address
   | id = uint32
 ;
 

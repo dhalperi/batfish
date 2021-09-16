@@ -56,7 +56,7 @@ mldp_session_protection
 
 mldp_router_id
 :
-   ROUTER_ID IP_ADDRESS NEWLINE
+   ROUTER_ID ip_address NEWLINE
 ;
 
 mldpaf_label

@@ -288,7 +288,7 @@ shutdown_iis_stanza
 
 summary_address_is_stanza
 :
-   SUMMARY_ADDRESS ip = IP_ADDRESS mask = IP_ADDRESS
+   SUMMARY_ADDRESS network = ip_prefix
    (
       LEVEL_1
       | LEVEL_1_2

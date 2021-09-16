@@ -25,7 +25,7 @@ rr_distance
 :
    DISTANCE distance = dec
    (
-      prefix = IP_ADDRESS mask = IP_ADDRESS
+      prefix = ip_address mask = ip_address
    )?
    NEWLINE
 ;
@@ -50,7 +50,7 @@ rr_distribute_list
 
 rr_network
 :
-   NETWORK network = IP_ADDRESS NEWLINE
+   NETWORK network = ip_address NEWLINE
 ;
 
 rr_null

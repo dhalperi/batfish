@@ -48,12 +48,12 @@ eos_vxif_vxlan
 
 eos_vxif_vxlan_flood
 :
-   FLOOD VTEP (ADD | REMOVE)? (hosts += IP_ADDRESS)+ NEWLINE
+   FLOOD VTEP (ADD | REMOVE)? (hosts += ip_address)+ NEWLINE
 ;
 
 eos_vxif_vxlan_multicast_group
 :
-   MULTICAST_GROUP group = IP_ADDRESS NEWLINE
+   MULTICAST_GROUP group = ip_address NEWLINE
 ;
 
 eos_vxif_vxlan_source_interface
@@ -141,8 +141,8 @@ if_bfd_interval
 if_bfd_neighbor
 :
   NEIGHBOR SRC_IP (
-     src_ip = IP_ADDRESS DEST_IP dst_ip = IP_ADDRESS
-     | src_ip = IPV6_ADDRESS DEST_IP dst_ip = IPV6_ADDRESS
+     src_ip = ip_address DEST_IP dst_ip = ip_address
+     | src_ip6 = IPV6_ADDRESS DEST_IP dst_ip6 = IPV6_ADDRESS
   ) NEWLINE
 ;
 
@@ -248,7 +248,7 @@ ifd_switchport_eos
 
 if_default_gw
 :
-   DEFAULT_GW IP_ADDRESS NEWLINE
+   DEFAULT_GW ip_address NEWLINE
 ;
 
 if_description
@@ -360,7 +360,7 @@ ifipdhcpr_information_eos
 
 if_ip_helper_address
 :
-   HELPER_ADDRESS address = IP_ADDRESS NEWLINE
+   HELPER_ADDRESS address = ip_address NEWLINE
 ;
 
 if_ip_inband_access_group
@@ -415,7 +415,7 @@ if_ip_nat
 
 ifipn_destination
 :
-   DESTINATION STATIC IP_ADDRESS ACCESS_LIST acl = variable IP_ADDRESS
+   DESTINATION STATIC ip_address ACCESS_LIST acl = variable ip_address
    NEWLINE
 ;
 
@@ -440,9 +440,9 @@ ifipns_dynamic
 ifipns_static
 :
    STATIC
-   original_ip = IP_ADDRESS (original_port = port_number)?
+   original_ip = ip_address (original_port = port_number)?
    (ACCESS_LIST acl = variable)?
-   tx_ip = IP_ADDRESS (tx_port = port_number)?
+   tx_ip = ip_address (tx_port = port_number)?
    (PROTOCOL (TCP | UDP))?
    NEWLINE
 ;
@@ -615,7 +615,7 @@ ifip_verify_unicast_eos
 
 if_ip_virtual_router
 :
-   VIRTUAL_ROUTER ADDRESS address = IP_ADDRESS NEWLINE
+   VIRTUAL_ROUTER ADDRESS address = ip_address NEWLINE
 ;
 
 if_ipv6
@@ -912,7 +912,7 @@ if_no_bfd
      | ECHO
      | ECHO_RX_INTERVAL
      | INTERVAL
-     | NEIGHBOR SRC_IP src_ip = IP_ADDRESS DEST_IP dst_ip = IP_ADDRESS
+     | NEIGHBOR SRC_IP src_ip = ip_address DEST_IP dst_ip = ip_address
      | NEIGHBOR SRC_IP src_ip6 = IPV6_ADDRESS DEST_IP dst_ip6 = IPV6_ADDRESS
      | OPTIMIZE SUBINTERFACE
   ) NEWLINE
@@ -1826,6 +1826,7 @@ ifigmphp_null
       EXCLUDE
       | INCLUDE
       | IP_ADDRESS
+      | SUBNET_MASK
       | REPORT_INTERVAL
       | VERSION
    ) null_rest_of_line
@@ -1871,6 +1872,7 @@ ifigmpsg_null
 :
    (
       IP_ADDRESS
+      | SUBNET_MASK
       | RANGE
    ) null_rest_of_line
 ;
@@ -1887,7 +1889,7 @@ iftunnel_bandwidth
 
 iftunnel_destination
 :
-   DESTINATION IP_ADDRESS NEWLINE
+   DESTINATION ip_address NEWLINE
 ;
 
 iftunnel_key
@@ -1923,7 +1925,7 @@ iftunnel_source
    SOURCE 
    (
      DYNAMIC
-     | IP_ADDRESS
+     | ip_address
      | iname = interface_name_unstructured
    ) NEWLINE
 ;
@@ -1945,12 +1947,12 @@ ifvrrp_description
 
 ifvrrp_ip
 :
-   IP ip = IP_ADDRESS SECONDARY? NEWLINE
+   IP ip = ip_address SECONDARY? NEWLINE
 ;
 
 ifvrrp_ipv4
 :
-   IPV4 ip = IP_ADDRESS NEWLINE
+   IPV4 ip = ip_address NEWLINE
 ;
 
 ifvrrp_ipv6

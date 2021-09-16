@@ -194,7 +194,6 @@ import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.batfish.common.BatfishException;
 import org.batfish.common.NetworkSnapshot;
 import org.batfish.common.Warnings;
@@ -643,6 +642,7 @@ import org.batfish.grammar.arista.AristaParser.Int_exprContext;
 import org.batfish.grammar.arista.AristaParser.Interface_addressContext;
 import org.batfish.grammar.arista.AristaParser.Interface_is_stanzaContext;
 import org.batfish.grammar.arista.AristaParser.Interface_nameContext;
+import org.batfish.grammar.arista.AristaParser.Ip_addressContext;
 import org.batfish.grammar.arista.AristaParser.Ip_community_list_expanded_stanzaContext;
 import org.batfish.grammar.arista.AristaParser.Ip_community_list_standard_stanzaContext;
 import org.batfish.grammar.arista.AristaParser.Ip_dhcp_relay_serverContext;
@@ -656,6 +656,7 @@ import org.batfish.grammar.arista.AristaParser.Ip_prefix_list_stanzaContext;
 import org.batfish.grammar.arista.AristaParser.Ip_prefix_list_tailContext;
 import org.batfish.grammar.arista.AristaParser.Ip_route_nexthopContext;
 import org.batfish.grammar.arista.AristaParser.Ip_ssh_versionContext;
+import org.batfish.grammar.arista.AristaParser.Ip_wildcardContext;
 import org.batfish.grammar.arista.AristaParser.Ipap_access_listContext;
 import org.batfish.grammar.arista.AristaParser.Ipap_originContext;
 import org.batfish.grammar.arista.AristaParser.Ipsec_authenticationContext;
@@ -1057,12 +1058,19 @@ public class AristaControlPlaneExtractor extends AristaParserBaseListener
         .get();
   }
 
-  private static Ip toIp(TerminalNode t) {
-    return Ip.parse(t.getText());
+  private static Ip toIp(Ip_addressContext ctx) {
+    return Ip.parse(ctx.getText());
   }
 
   private static Ip toIp(Token t) {
     return Ip.parse(t.getText());
+  }
+
+  private static IpWildcard toIpWildcard(Ip_wildcardContext ctx) {
+    Ip addr = toIp(ctx.ip);
+    Ip wildcardMask = toIp(ctx.wildcard);
+    // Note: mask in config is bits that matter, so invert for Batfish IpWildcard mask.
+    return IpWildcard.ipWithWildcardMask(addr, wildcardMask.inverted());
   }
 
   private static Ip6 toIp6(Token t) {
@@ -1410,10 +1418,7 @@ public class AristaControlPlaneExtractor extends AristaParserBaseListener
     } else if (ctx.prefix != null) {
       return IpWildcard.create(toPrefix(ctx.prefix));
     } else if (ctx.wildcard_ip != null) {
-      assert ctx.wildcard_mask != null;
-      // Note: mask in config is bits that matter, so invert for Batfish IpWildcard mask.
-      return IpWildcard.ipWithWildcardMask(
-          toIp(ctx.wildcard_ip), toIp(ctx.wildcard_mask).inverted());
+      return toIpWildcard(ctx.wildcard_ip);
     } else {
       assert ctx.ANY() != null;
       return IpWildcard.ANY;
@@ -1489,7 +1494,7 @@ public class AristaControlPlaneExtractor extends AristaParserBaseListener
     if (ctx.NO() != null) {
       return;
     }
-    _currentNamedRsaPubKey.setAddress(toIp(ctx.ip_address));
+    _currentNamedRsaPubKey.setAddress(toIp(ctx.ip));
   }
 
   @Override
@@ -1576,8 +1581,7 @@ public class AristaControlPlaneExtractor extends AristaParserBaseListener
         .getIsakmpKeys()
         .add(
             new IsakmpKey(
-                IpWildcard.ipWithWildcardMask(toIp(ctx.ip_address), wildCardMask.inverted())
-                    .toIpSpace(),
+                IpWildcard.ipWithWildcardMask(toIp(ctx.ip), wildCardMask.inverted()).toIpSpace(),
                 ikeKeyType == IkeKeyType.PRE_SHARED_KEY_UNENCRYPTED
                     ? CommonUtil.sha256Digest(psk + CommonUtil.salt())
                     : psk,
@@ -1678,13 +1682,13 @@ public class AristaControlPlaneExtractor extends AristaParserBaseListener
 
   @Override
   public void exitCisprf_self_identity(Cisprf_self_identityContext ctx) {
-    _currentIsakmpProfile.setSelfIdentity(toIp(ctx.IP_ADDRESS()));
+    _currentIsakmpProfile.setSelfIdentity(toIp(ctx.ip_address()));
   }
 
   @Override
   public void exitCisprf_local_address(Cisprf_local_addressContext ctx) {
-    if (ctx.IP_ADDRESS() != null) {
-      _currentIsakmpProfile.setLocalAddress(toIp(ctx.IP_ADDRESS()));
+    if (ctx.ip_address() != null) {
+      _currentIsakmpProfile.setLocalAddress(toIp(ctx.ip_address()));
     } else {
       _currentIsakmpProfile.setLocalInterfaceName(ctx.iname.getText());
     }
@@ -1692,8 +1696,8 @@ public class AristaControlPlaneExtractor extends AristaParserBaseListener
 
   @Override
   public void exitCkr_local_address(Ckr_local_addressContext ctx) {
-    if (ctx.IP_ADDRESS() != null) {
-      _currentKeyring.setLocalAddress(toIp(ctx.IP_ADDRESS()));
+    if (ctx.ip_address() != null) {
+      _currentKeyring.setLocalAddress(toIp(ctx.ip_address()));
     } else {
       _currentKeyring.setLocalInterfaceName(ctx.iname.getText());
     }
@@ -1705,7 +1709,7 @@ public class AristaControlPlaneExtractor extends AristaParserBaseListener
     _currentKeyring.setKey(
         CommonUtil.sha256Digest(ctx.variable_permissive().getText() + CommonUtil.salt()));
     _currentKeyring.setRemoteIdentity(
-        IpWildcard.ipWithWildcardMask(toIp(ctx.ip_address), wildCardMask.inverted()));
+        IpWildcard.ipWithWildcardMask(toIp(ctx.ip), wildCardMask.inverted()));
   }
 
   @Override
@@ -1783,10 +1787,7 @@ public class AristaControlPlaneExtractor extends AristaParserBaseListener
 
   @Override
   public void enterEos_rb_aa_v4(Eos_rb_aa_v4Context ctx) {
-    Prefix prefix =
-        ctx.prefix != null
-            ? Prefix.parse(ctx.prefix.getText())
-            : Prefix.create(toIp(ctx.ip), toIp(ctx.mask));
+    Prefix prefix = toPrefix(ctx.prefix);
     _currentAristaBgpAggregateNetwork = new AristaBgpAggregateNetwork();
     _currentAristaBgpVrf.getV4aggregates().put(prefix, _currentAristaBgpAggregateNetwork);
   }
@@ -3396,7 +3397,7 @@ public class AristaControlPlaneExtractor extends AristaParserBaseListener
     }
 
     if (ctx.REMOVE() != null) {
-      for (Token host : ctx.hosts) {
+      for (Ip_addressContext host : ctx.hosts) {
         floodAddresses.remove(toIp(host));
       }
       return;
@@ -3406,7 +3407,7 @@ public class AristaControlPlaneExtractor extends AristaParserBaseListener
       // Replace existing addresses instead of adding
       floodAddresses.clear();
     }
-    for (Token host : ctx.hosts) {
+    for (Ip_addressContext host : ctx.hosts) {
       floodAddresses.add(toIp(host));
     }
   }
@@ -4585,15 +4586,10 @@ public class AristaControlPlaneExtractor extends AristaParserBaseListener
 
   private @Nonnull AccessListAddressSpecifier toAccessListAddressSpecifier(
       Access_list_ip_rangeContext ctx) {
-    if (ctx.ip != null) {
-      if (ctx.wildcard != null) {
-        // IP and mask
-        Ip wildcard = toIp(ctx.wildcard);
-        return new WildcardAddressSpecifier(IpWildcard.ipWithWildcardMask(toIp(ctx.ip), wildcard));
-      } else {
-        // Just IP. Same as if 'host' was specified
-        return new WildcardAddressSpecifier(IpWildcard.create(toIp(ctx.ip)));
-      }
+    if (ctx.wildcard != null) {
+      return new WildcardAddressSpecifier(toIpWildcard(ctx.wildcard));
+    } else if (ctx.ip != null) {
+      return new WildcardAddressSpecifier(IpWildcard.create(toIp(ctx.ip)));
     } else if (ctx.ANY() != null) {
       return AnyAddressSpecifier.INSTANCE;
     } else if (ctx.prefix != null) {
@@ -5313,7 +5309,7 @@ public class AristaControlPlaneExtractor extends AristaParserBaseListener
 
   @Override
   public void exitIftunnel_destination(Iftunnel_destinationContext ctx) {
-    Ip destination = toIp(ctx.IP_ADDRESS());
+    Ip destination = toIp(ctx.ip_address());
     for (Interface iface : _currentInterfaces) {
       iface.getTunnelInitIfNull().setDestination(destination);
     }
@@ -5357,8 +5353,8 @@ public class AristaControlPlaneExtractor extends AristaParserBaseListener
 
   @Override
   public void exitIftunnel_source(Iftunnel_sourceContext ctx) {
-    if (ctx.IP_ADDRESS() != null) {
-      Ip sourceAddress = toIp(ctx.IP_ADDRESS());
+    if (ctx.ip_address() != null) {
+      Ip sourceAddress = toIp(ctx.ip_address());
       for (Interface iface : _currentInterfaces) {
         iface.getTunnelInitIfNull().setSourceAddress(sourceAddress);
       }
@@ -6132,12 +6128,7 @@ public class AristaControlPlaneExtractor extends AristaParserBaseListener
   @Override
   public void exitRo_area_range(Ro_area_rangeContext ctx) {
     long areaNum = toLong(ctx.area);
-    Prefix prefix;
-    if (ctx.area_prefix != null) {
-      prefix = Prefix.parse(ctx.area_prefix.getText());
-    } else {
-      prefix = Prefix.create(toIp(ctx.area_ip), toIp(ctx.area_subnet));
-    }
+    Prefix prefix = toPrefix(ctx.prefix);
     boolean advertise = ctx.NOT_ADVERTISE() == null;
     Long cost = ctx.cost == null ? null : toLong(ctx.cost);
 
@@ -6806,8 +6797,8 @@ public class AristaControlPlaneExtractor extends AristaParserBaseListener
   @Override
   public void exitSet_next_hop_rm_stanza(Set_next_hop_rm_stanzaContext ctx) {
     List<Ip> nextHops = new ArrayList<>();
-    for (Token t : ctx.nexthop_list) {
-      Ip nextHop = toIp(t);
+    for (Ip_addressContext ip : ctx.nexthop_list) {
+      Ip nextHop = toIp(ip);
       nextHops.add(nextHop);
     }
     RouteMapSetNextHopLine line = new RouteMapSetNextHopLine(nextHops);
@@ -6966,9 +6957,7 @@ public class AristaControlPlaneExtractor extends AristaParserBaseListener
 
   @Override
   public void exitSummary_address_is_stanza(Summary_address_is_stanzaContext ctx) {
-    Ip ip = toIp(ctx.ip);
-    Ip mask = toIp(ctx.mask);
-    Prefix prefix = Prefix.create(ip, mask);
+    Prefix prefix = toPrefix(ctx.network);
     RoutingProtocol sourceProtocol = RoutingProtocol.ISIS_L1;
     IsisRedistributionPolicy r = new IsisRedistributionPolicy(sourceProtocol);
     r.setSummaryPrefix(prefix);
@@ -8019,9 +8008,9 @@ public class AristaControlPlaneExtractor extends AristaParserBaseListener
   @Nonnull
   private RouteDistinguisher toRouteDistinguisher(Route_distinguisherContext ctx) {
     long dec = toInteger(ctx.uint16());
-    if (ctx.IP_ADDRESS() != null) {
+    if (ctx.ip_address() != null) {
       checkArgument(dec <= 0xFFFFL, "Invalid route distinguisher %s", ctx.getText());
-      return RouteDistinguisher.from(toIp(ctx.IP_ADDRESS()), (int) dec);
+      return RouteDistinguisher.from(toIp(ctx.ip_address()), (int) dec);
     }
     return RouteDistinguisher.from(toAsNum(ctx.bgp_asn()), dec);
   }
@@ -8029,8 +8018,8 @@ public class AristaControlPlaneExtractor extends AristaParserBaseListener
   @Nonnull
   private ExtendedCommunity toRouteTarget(Route_targetContext ctx) {
     long la = toInteger(ctx.uint16());
-    if (ctx.IP_ADDRESS() != null) {
-      return ExtendedCommunity.target(toIp(ctx.IP_ADDRESS()).asLong(), la);
+    if (ctx.ip_address() != null) {
+      return ExtendedCommunity.target(toIp(ctx.ip_address()).asLong(), la);
     }
     return ExtendedCommunity.target(toAsNum(ctx.bgp_asn()), la);
   }

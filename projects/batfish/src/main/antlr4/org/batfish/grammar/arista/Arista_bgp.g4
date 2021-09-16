@@ -8,7 +8,7 @@ options {
 
 eos_neighbor_id
 :
-  v4 = IP_ADDRESS
+  v4 = ip_address
   | v6 = IPV6_ADDRESS
   | pg = variable
 ;
@@ -1460,7 +1460,7 @@ eos_rbib_client_to_client
 
 eos_rbib_cluster_id
 :
-  CLUSTER_ID ip = IP_ADDRESS NEWLINE
+  CLUSTER_ID ip = ip_address NEWLINE
 ;
 
 eos_rbib_labeled_unicast
@@ -1486,7 +1486,7 @@ eos_rbibl_range
 :
   RANGE
   (
-    ip = IP_ADDRESS MASK mask = IP_ADDRESS
+    ip = ip_address MASK mask = SUBNET_MASK
     | prefix = IP_PREFIX
     | ip6prefix = IPV6_PREFIX
   )
@@ -1662,7 +1662,7 @@ eos_rbi_neighbor
 
 eos_rbi_neighbor4
 :
-  name = IP_ADDRESS
+  name = ip_address
   (
     eos_rbi_neighbor_common
     | eos_rbin_local_v6_addr
@@ -1929,7 +1929,7 @@ eos_rbi_network
 eos_rbi_network4
 :
   (
-    ip = IP_ADDRESS MASK mask = IP_ADDRESS
+    ip = ip_address MASK mask = SUBNET_MASK
     | prefix = IP_PREFIX
   )
   (ROUTE_MAP rm = variable)?
@@ -2862,7 +2862,7 @@ eos_rbir_static
 
 eos_rbi_router_id
 :
-  ROUTER_ID id = IP_ADDRESS NEWLINE
+  ROUTER_ID id = ip_address NEWLINE
 ;
 
 eos_rbi_shutdown
@@ -2924,10 +2924,8 @@ eos_rb_aa_modifiers
 
 eos_rb_aa_v4
 :
-  (
-    ip = IP_ADDRESS mask = IP_ADDRESS
-    | prefix = IP_PREFIX
-  ) eos_rb_aa_modifiers*
+  prefix = ip_prefix
+  eos_rb_aa_modifiers*
   NEWLINE
 ;
 

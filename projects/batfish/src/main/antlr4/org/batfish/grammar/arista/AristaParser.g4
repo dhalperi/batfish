@@ -94,9 +94,9 @@ allowed_ip
 :
    (
       (
-         hostname = IP_ADDRESS mask = IP_ADDRESS
+         ip = ip_address mask = SUBNET_MASK
       )
-      | hostname = IPV6_ADDRESS
+      | ip6 = IPV6_ADDRESS
    ) iname = variable NEWLINE
 ;
 
@@ -977,7 +977,7 @@ ip_dhcp_relay_server
 :
    SERVER
    (
-      ip = IP_ADDRESS
+      ip = ip_address
       | ip6 = IPV6_ADDRESS
    ) NEWLINE
 ;
@@ -1014,9 +1014,9 @@ ip_nat_null
 
 ip_nat_pool
 :
-   IP NAT POOL name = variable first = IP_ADDRESS last = IP_ADDRESS
+   IP NAT POOL name = variable first = ip_address last = ip_address
    (
-      NETMASK mask = IP_ADDRESS
+      NETMASK mask = SUBNET_MASK
       | PREFIX_LENGTH prefix_length = dec
    )? NEWLINE
 ;
@@ -1025,7 +1025,7 @@ ip_nat_pool_range
 :
    IP NAT POOL name = variable PREFIX_LENGTH prefix_length = dec NEWLINE
    (
-      RANGE first = IP_ADDRESS last = IP_ADDRESS NEWLINE
+      RANGE first = ip_address last = ip_address NEWLINE
    )+
 ;
 
@@ -1151,7 +1151,7 @@ ipca_null
 
 ipdg_address
 :
-   ip = IP_ADDRESS NEWLINE
+   ip = ip_address NEWLINE
 ;
 
 ipdg_null
@@ -1753,7 +1753,7 @@ peer_sa_filter
 
 peer_stanza
 :
-   PEER IP_ADDRESS NEWLINE
+   PEER ip_address NEWLINE
    (
       mp_null
       | peer_sa_filter
@@ -3603,13 +3603,15 @@ ts_common
    ts_null
 ;
 
+ts_host_hostname
+:
+   ip = ip_address
+   | ip6 = IPV6_ADDRESS
+;
+
 ts_host
 :
-   HOST hostname =
-   (
-      IP_ADDRESS
-      | IPV6_ADDRESS
-   ) null_rest_of_line t_key?
+   HOST hostname = ts_host_hostname null_rest_of_line t_key?
 ;
 
 ts_null
@@ -3759,7 +3761,7 @@ viaf_vrrp
 
 viafv_address
 :
-   ADDRESS address = IP_ADDRESS NEWLINE
+   ADDRESS address = ip_address NEWLINE
 ;
 
 viafv_null

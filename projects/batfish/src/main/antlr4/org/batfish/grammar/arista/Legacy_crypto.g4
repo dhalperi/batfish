@@ -120,7 +120,7 @@ cd_set_null
 
 cd_set_peer
 :
-    PEER address = IP_ADDRESS NEWLINE
+    PEER address = ip_address NEWLINE
 ;
 
 cd_set_pfs
@@ -369,7 +369,7 @@ cipt_mode
 
 cis_key
 :
-   KEY dec? key = VARIABLE ADDRESS ip_address = IP_ADDRESS (wildcard_mask = IP_ADDRESS)? NEWLINE
+   KEY dec? key = VARIABLE ADDRESS ip = ip_address (wildcard_mask = ip_address)? NEWLINE
 ;
 
 cis_null
@@ -472,14 +472,14 @@ cisprf_local_address
 :
     LOCAL_ADDRESS
     (
-       IP_ADDRESS
+       ip_address
        | iname = interface_name_unstructured
     ) NEWLINE
 ;
 
 cisprf_match
 :
-   MATCH IDENTITY ADDRESS address = IP_ADDRESS mask = IP_ADDRESS? NEWLINE
+   MATCH IDENTITY ADDRESS address = ip_address mask = ip_address? NEWLINE
 ;
 
 cisprf_null
@@ -493,7 +493,7 @@ cisprf_null
 
 cisprf_self_identity
 :
-   SELF_IDENTITY IP_ADDRESS NEWLINE
+   SELF_IDENTITY ip_address NEWLINE
 ;
 
 
@@ -521,7 +521,7 @@ ckp_named_key
 
 ckpn_address
 :
-   NO? ADDRESS ip_address = IP_ADDRESS NEWLINE
+   NO? ADDRESS ip = ip_address NEWLINE
 ;
 
 ckpn_key_string
@@ -533,14 +533,14 @@ ckr_local_address
 :
    LOCAL_ADDRESS
    (
-      IP_ADDRESS
+      ip_address
       | iname = interface_name_unstructured
    ) NEWLINE
 ;
 
 ckr_psk
 :
-   PRE_SHARED_KEY ADDRESS ip_address = IP_ADDRESS (wildcard_mask = IP_ADDRESS)? KEY variable_permissive NEWLINE
+   PRE_SHARED_KEY ADDRESS ip = ip_address (wildcard_mask = ip_address)? KEY variable_permissive NEWLINE
 ;
 
 cpki_certificate_chain
@@ -813,7 +813,7 @@ crypto_map_t_ii_set_null
 
 crypto_map_t_ii_set_peer
 :
-    PEER address = IP_ADDRESS NEWLINE
+    PEER address = ip_address NEWLINE
 ;
 
 crypto_map_t_ii_set_pfs

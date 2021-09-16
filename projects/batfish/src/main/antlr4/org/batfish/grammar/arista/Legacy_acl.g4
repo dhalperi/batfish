@@ -8,9 +8,9 @@ options {
 
 access_list_ip_range
 :
-   ip = IP_ADDRESS wildcard = IP_ADDRESS
+   wildcard = ip_wildcard
  | prefix = IP_PREFIX
- | HOST ip = IP_ADDRESS
+ | HOST ip = ip_address
  | ANY
 ;
 
@@ -202,9 +202,9 @@ extended_access_list_tail
       alps_dst = port_specifier
    )? features += extended_access_list_additional_feature*
    (
-      NEXTHOP1 IPV4 nexthop1 = IP_ADDRESS
+      NEXTHOP1 IPV4 nexthop1 = ip_address
       (
-         NEXTHOP2 IPV4 nexthop2 = IP_ADDRESS
+         NEXTHOP2 IPV4 nexthop2 = ip_address
       )?
    )?
    (
@@ -391,7 +391,7 @@ netdestination_description
 
 netdestination_host
 :
-   HOST ip = IP_ADDRESS NEWLINE
+   HOST ip = ip_address NEWLINE
 ;
 
 netdestination_invert
@@ -406,7 +406,7 @@ netdestination_name
 
 netdestination_network
 :
-   NETWORK net = IP_ADDRESS mask = IP_ADDRESS NEWLINE
+   NETWORK prefix = ip_prefix NEWLINE
 ;
 
 netdestination6_description
@@ -661,8 +661,8 @@ s_ip_access_list
 acl_ipv4_match
 :
    ANY
-   | wildcard_ip = IP_ADDRESS wildcard_mask = IP_ADDRESS
-   | HOST host = IP_ADDRESS
+   | wildcard_ip = ip_wildcard
+   | HOST host = ip_address
    | prefix = IP_PREFIX
 ;
 

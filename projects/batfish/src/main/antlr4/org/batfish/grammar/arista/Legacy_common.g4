@@ -150,7 +150,7 @@ interface_name_unstructured
 
 ip_hostname
 :
-   IP_ADDRESS
+   ip_address
    | IPV6_ADDRESS
 ;
 
@@ -493,12 +493,12 @@ range
 
 route_distinguisher
 :
-   (IP_ADDRESS | bgp_asn) COLON uint16
+   (ip_address | bgp_asn) COLON uint16
 ;
 
 route_target
 :
-   (IP_ADDRESS | bgp_asn) COLON uint16
+   (ip_address | bgp_asn) COLON uint16
 ;
 
 subrange
@@ -546,7 +546,7 @@ variable_hostname
 
 variable_interface_name
 :
-   ~( DEC | UINT8 | UINT16 | UINT32 | IP_ADDRESS | IP_PREFIX | ADMIN_DIST | ADMIN_DISTANCE | METRIC |
+   ~( DEC | UINT8 | UINT16 | UINT32 | IP_ADDRESS | IP_PREFIX | SUBNET_MASK | ADMIN_DIST | ADMIN_DISTANCE | METRIC |
    NAME | NEWLINE | TAG | TRACK | VARIABLE )
 ;
 

@@ -5153,6 +5153,13 @@ FORWARD_SLASH
    '/'
 ;
 
+// Must be above IP_ADDRESS so it is preferred
+SUBNET_MASK
+:
+  F_SubnetMask
+;
+
+// Must be below SUBNET_MASK so it is not preferred
 IP_ADDRESS
 :
   F_IpAddress
@@ -5504,6 +5511,29 @@ fragment
 F_StandardCommunity
 :
   F_Uint16 ':' F_Uint16
+;
+
+fragment
+F_SubnetMask
+:
+  F_SubnetMaskOctet '.0.0.0'
+  | '255.' F_SubnetMaskOctet '.0.0'
+  | '255.255.' F_SubnetMaskOctet '.0'
+  | '255.255.255.' F_SubnetMaskOctet
+;
+
+fragment
+F_SubnetMaskOctet
+:
+  '0'
+  | '128'
+  | '192'
+  | '224'
+  | '240'
+  | '248'
+  | '252'
+  | '254'
+  | '255'
 ;
 
 fragment

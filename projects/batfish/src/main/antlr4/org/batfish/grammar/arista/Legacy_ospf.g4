@@ -49,12 +49,7 @@ ro_area_nssa
 ro_area_range
 :
    AREA area = ospf_area RANGE
-   (
-      (
-         area_ip = IP_ADDRESS area_subnet = IP_ADDRESS
-      )
-      | area_prefix = IP_PREFIX
-   )
+   prefix = ip_prefix
    (
       ADVERTISE
       | NOT_ADVERTISE
@@ -180,9 +175,7 @@ ro_network
 :
    NETWORK
    (
-      (
-         ip = IP_ADDRESS wildcard = IP_ADDRESS
-      )
+      ip = ip_address wildcard = ip_address
       | prefix = IP_PREFIX
    ) AREA area = ospf_area
    NEWLINE
@@ -348,12 +341,12 @@ ro_redistribute_static
 
 ro_router_id
 :
-   ROUTER_ID ip = IP_ADDRESS NEWLINE
+   ROUTER_ID ip = ip_address NEWLINE
 ;
 
 ro_summary_address
 :
-   SUMMARY_ADDRESS network = IP_ADDRESS mask = IP_ADDRESS NOT_ADVERTISE?
+   SUMMARY_ADDRESS prefix = ip_prefix NOT_ADVERTISE?
    NEWLINE
 ;
 

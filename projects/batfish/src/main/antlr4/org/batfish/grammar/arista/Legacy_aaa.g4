@@ -327,9 +327,9 @@ aaa_authentication_include
    INCLUDE name = variable
    (
       FORWARD_SLASH dec
-   )? iface = variable srcip = IP_ADDRESS srcmask = IP_ADDRESS
+   )? iface = variable srcip = ip_address srcmask = ip_address
    (
-      dstip = IP_ADDRESS dstmask = IP_ADDRESS
+      dstip = ip_address dstmask = ip_address
    )? group = variable NEWLINE
 ;
 
@@ -676,9 +676,9 @@ aaa_authorization_include
    INCLUDE name = variable
    (
       FORWARD_SLASH dec
-   )? iface = variable srcip = IP_ADDRESS srcmask = IP_ADDRESS
+   )? iface = variable srcip = ip_address srcmask = ip_address
    (
-      dstip = IP_ADDRESS dstmask = IP_ADDRESS
+      dstip = ip_address dstmask = ip_address
    )? group = variable NEWLINE
 ;
 
@@ -765,7 +765,7 @@ aaa_group_server
 :
    SERVER
    (
-      IP_ADDRESS
+      ip_address
       | IPV6_ADDRESS
       | name = variable
    )
@@ -844,7 +844,7 @@ aaa_server_client
 :
    CLIENT
    (
-      IP_ADDRESS
+      ip_address
       | name = variable
    )
    SERVER_KEY
