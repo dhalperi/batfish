@@ -4,47 +4,40 @@ load("@batfish//skylark:pmd_test.bzl", "pmd_test")
 
 package(default_visibility = ["//visibility:public"])
 
-filegroup(
-    name = "parser_files",
-    srcs = [
-        "src/main/java/org/batfish/common/BatfishException.java",
-        "src/main/java/org/batfish/common/DebugBatfishException.java",
-        "src/main/java/org/batfish/common/ErrorDetails.java",
-        "src/main/java/org/batfish/common/ParseTreeSentences.java",
-        "src/main/java/org/batfish/common/WillNotCommitException.java",
-        "src/main/java/org/batfish/common/util/BatfishObjectMapper.java",
-        "src/main/java/org/batfish/common/util/serialization/BatfishThirdPartyDeserializers.java",
-        "src/main/java/org/batfish/common/util/serialization/BatfishThirdPartySerializationModule.java",
-        "src/main/java/org/batfish/common/util/serialization/BatfishThirdPartySerializers.java",
-        "src/main/java/org/batfish/common/util/serialization/guava/RangeSetDeserializer.java",
-        "src/main/java/org/batfish/common/util/serialization/guava/RangeSetDeserializerConverter.java",
-        "src/main/java/org/batfish/common/util/serialization/guava/RangeSetSerializer.java",
-        "src/main/java/org/batfish/common/util/serialization/guava/RangeSetSerializerConverter.java",
-        "src/main/java/org/batfish/datamodel/answers/AnswerElement.java",
-        "src/main/java/org/batfish/datamodel/answers/AnswerSummary.java",
-        "src/main/java/org/batfish/grammar/BatfishANTLRErrorStrategy.java",
-        "src/main/java/org/batfish/grammar/BatfishCombinedParser.java",
-        "src/main/java/org/batfish/grammar/BatfishGrammarErrorListener.java",
-        "src/main/java/org/batfish/grammar/BatfishLexer.java",
-        "src/main/java/org/batfish/grammar/BatfishLexerErrorListener.java",
-        "src/main/java/org/batfish/grammar/BatfishLexerRecoveryStrategy.java",
-        "src/main/java/org/batfish/grammar/BatfishParseException.java",
-        "src/main/java/org/batfish/grammar/BatfishParseTreeWalker.java",
-        "src/main/java/org/batfish/grammar/BatfishParser.java",
-        "src/main/java/org/batfish/grammar/BatfishParserATNSimulator.java",
-        "src/main/java/org/batfish/grammar/BatfishParserErrorListener.java",
-        "src/main/java/org/batfish/grammar/GrammarSettings.java",
-        "src/main/java/org/batfish/grammar/ImplementedRules.java",
-        "src/main/java/org/batfish/grammar/ParseTreePrettyPrinter.java",
-        "src/main/java/org/batfish/grammar/UnrecognizedLineToken.java",
-        "src/main/java/org/batfish/grammar/flattener/FlattenerLineMap.java",
-    ],
-)
+# IDEALLY we don't need this, but it's not straightforward to remove
+# a filegroup from a glob.
+PARSER_FILES = [
+    "src/main/java/org/batfish/common/BatfishException.java",
+    "src/main/java/org/batfish/common/DebugBatfishException.java",
+    "src/main/java/org/batfish/common/ErrorDetails.java",
+    "src/main/java/org/batfish/common/ParseTreeSentences.java",
+    "src/main/java/org/batfish/common/WillNotCommitException.java",
+    "src/main/java/org/batfish/common/util/BatfishObjectMapper.java",
+    "src/main/java/org/batfish/datamodel/answers/AnswerElement.java",
+    "src/main/java/org/batfish/datamodel/answers/AnswerSummary.java",
+    "src/main/java/org/batfish/grammar/BatfishANTLRErrorStrategy.java",
+    "src/main/java/org/batfish/grammar/BatfishCombinedParser.java",
+    "src/main/java/org/batfish/grammar/BatfishGrammarErrorListener.java",
+    "src/main/java/org/batfish/grammar/BatfishLexer.java",
+    "src/main/java/org/batfish/grammar/BatfishLexerErrorListener.java",
+    "src/main/java/org/batfish/grammar/BatfishLexerRecoveryStrategy.java",
+    "src/main/java/org/batfish/grammar/BatfishParseException.java",
+    "src/main/java/org/batfish/grammar/BatfishParseTreeWalker.java",
+    "src/main/java/org/batfish/grammar/BatfishParser.java",
+    "src/main/java/org/batfish/grammar/BatfishParserATNSimulator.java",
+    "src/main/java/org/batfish/grammar/BatfishParserErrorListener.java",
+    "src/main/java/org/batfish/grammar/GrammarSettings.java",
+    "src/main/java/org/batfish/grammar/ImplementedRules.java",
+    "src/main/java/org/batfish/grammar/ParseTreePrettyPrinter.java",
+    "src/main/java/org/batfish/grammar/UnrecognizedLineToken.java",
+    "src/main/java/org/batfish/grammar/flattener/FlattenerLineMap.java",
+]
 
 java_library(
     name = "parser_common",
-    srcs = [":parser_files"],
+    srcs = PARSER_FILES,
     deps = [
+        "//projects/batfish-common-protocol/src/main/java/org/batfish/common/util/serialization",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_fasterxml_jackson_core_jackson_core",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
@@ -59,9 +52,12 @@ java_library(
 
 java_library(
     name = "common",
-    srcs = glob([
-        "src/main/**/*.java",
-    ]),
+    srcs = glob(
+        [
+            "src/main/**/*.java",
+        ],
+        exclude = PARSER_FILES,
+    ),
     plugins = [
         "//:auto_service_plugin",
     ],
@@ -69,18 +65,17 @@ java_library(
         "src/generated/resources/org/batfish/common/common.properties",
         "src/main/resources/org/batfish/common/util/salt",
     ],
+    exports = [":parser_common"],
     runtime_deps = [
         "@maven//:commons_beanutils_commons_beanutils",
         "@maven//:org_glassfish_jersey_inject_jersey_hk2",
     ],
     deps = [
+        ":parser_common",
         "//projects/bdd",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_fasterxml_jackson_core_jackson_core",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
-        "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_guava",
-        "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_jdk8",
-        "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_jsr310",
         "@maven//:com_github_ben_manes_caffeine_caffeine",
         "@maven//:com_google_auto_service_auto_service_annotations",
         "@maven//:com_google_code_findbugs_jsr305",
