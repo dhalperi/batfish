@@ -74,7 +74,6 @@ import org.batfish.common.plugin.IClient;
 import org.batfish.common.util.Backoff;
 import org.batfish.common.util.BatfishObjectMapper;
 import org.batfish.common.util.CommonUtil;
-import org.batfish.common.util.WorkItemBuilder;
 import org.batfish.common.util.ZipUtility;
 import org.batfish.datamodel.IntegerSpace;
 import org.batfish.datamodel.InterfaceType;
@@ -883,7 +882,7 @@ public class Client extends AbstractClient implements IClient {
     CommonUtil.deleteIfExists(questionFile);
     // answer the question
     WorkItem wItemAs =
-        WorkItemBuilder.getWorkItemAnswerQuestion(
+        WorkItem.getWorkItemAnswerQuestion(
             questionName,
             _currContainerName,
             _currTestrig,
@@ -933,7 +932,7 @@ public class Client extends AbstractClient implements IClient {
 
     // answer the question
     WorkItem wItemAs =
-        WorkItemBuilder.getWorkItemAnswerQuestion(
+        WorkItem.getWorkItemAnswerQuestion(
             questionName, _currContainerName, _currTestrig, _currDeltaTestrig, isDifferential);
 
     return execute(wItemAs, outWriter);
@@ -1074,8 +1073,7 @@ public class Client extends AbstractClient implements IClient {
     }
 
     // generate the data plane
-    WorkItem wItemGenDp =
-        WorkItemBuilder.getWorkItemGenerateDataPlane(_currContainerName, _currTestrig);
+    WorkItem wItemGenDp = WorkItem.getWorkItemGenerateDataPlane(_currContainerName, _currTestrig);
 
     return execute(wItemGenDp, outWriter);
   }
@@ -1303,7 +1301,7 @@ public class Client extends AbstractClient implements IClient {
 
     if (!autoAnalyze) {
       _logger.output("Parsing now.\n");
-      WorkItem wItemParse = WorkItemBuilder.getWorkItemParse(_currContainerName, testrigName);
+      WorkItem wItemParse = WorkItem.getWorkItemParse(_currContainerName, testrigName);
 
       if (!execute(wItemParse, outWriter)) {
         unsetTestrig(delta);

@@ -73,7 +73,6 @@ import org.batfish.common.runtime.RuntimeData;
 import org.batfish.common.runtime.SnapshotRuntimeData;
 import org.batfish.common.util.BatfishObjectMapper;
 import org.batfish.common.util.CommonUtil;
-import org.batfish.common.util.WorkItemBuilder;
 import org.batfish.coordinator.AnalysisMetadataMgr.AnalysisType;
 import org.batfish.coordinator.WorkDetails.WorkType;
 import org.batfish.coordinator.id.IdManager;
@@ -1572,10 +1571,10 @@ public final class WorkMgrTest {
     _manager.configureAnalysis(
         containerName, true, "useranalysis", Maps.newHashMap(), Lists.newArrayList(), false);
 
-    WorkItem parseWorkItem = WorkItemBuilder.getWorkItemParse(containerName, testrigName);
+    WorkItem parseWorkItem = WorkItem.getWorkItemParse(containerName, testrigName);
 
     WorkItem analysisWorkItem =
-        WorkItemBuilder.getWorkItemRunAnalysis("useranalysis", containerName, testrigName);
+        WorkItem.getWorkItemRunAnalysis("useranalysis", containerName, testrigName);
 
     List<WorkItem> workQueue = _manager.getAutoWorkQueue(containerName, testrigName);
 
@@ -1803,10 +1802,10 @@ public final class WorkMgrTest {
     _manager.configureAnalysis(
         containerName, true, "suggestedanalysis", Maps.newHashMap(), Lists.newArrayList(), true);
 
-    WorkItem parseWorkItem = WorkItemBuilder.getWorkItemParse(containerName, testrigName);
+    WorkItem parseWorkItem = WorkItem.getWorkItemParse(containerName, testrigName);
 
     WorkItem analysisWorkItem =
-        WorkItemBuilder.getWorkItemRunAnalysis("suggestedanalysis", containerName, testrigName);
+        WorkItem.getWorkItemRunAnalysis("suggestedanalysis", containerName, testrigName);
 
     List<WorkItem> workQueue = _manager.getAutoWorkQueue(containerName, testrigName);
 

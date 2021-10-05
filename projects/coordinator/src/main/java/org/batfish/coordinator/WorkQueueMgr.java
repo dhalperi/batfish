@@ -18,7 +18,6 @@ import org.batfish.common.BfConsts.TaskStatus;
 import org.batfish.common.CoordConsts.WorkStatusCode;
 import org.batfish.common.Task;
 import org.batfish.common.WorkItem;
-import org.batfish.common.util.WorkItemBuilder;
 import org.batfish.coordinator.WorkDetails.WorkType;
 import org.batfish.coordinator.queues.MemoryQueue;
 import org.batfish.coordinator.queues.WorkQueue;
@@ -88,7 +87,7 @@ public class WorkQueueMgr {
   private QueuedWork generateAndQueueDataplaneWork(
       String network, NetworkId networkId, String snapshot, SnapshotId snapshotId)
       throws Exception {
-    WorkItem newWItem = WorkItemBuilder.getWorkItemGenerateDataPlane(network, snapshot);
+    WorkItem newWItem = WorkItem.getWorkItemGenerateDataPlane(network, snapshot);
     WorkDetails details =
         WorkDetails.builder()
             .setWorkType(WorkType.DATAPLANING)
@@ -576,11 +575,11 @@ public class WorkQueueMgr {
           dataplaneDependent
               ? getBlockerForDataplaneDependentWork(
                   work,
-                  WorkItemBuilder.getReferenceSnapshotName(work.getWorkItem()),
+                  WorkItem.getReferenceSnapshotName(work.getWorkItem()),
                   wDetails.getReferenceSnapshotId())
               : getBlockerForParsingDependentWork(
                   work,
-                  WorkItemBuilder.getReferenceSnapshotName(work.getWorkItem()),
+                  WorkItem.getReferenceSnapshotName(work.getWorkItem()),
                   wDetails.getReferenceSnapshotId());
       if (deltaBlocker != null) {
         return queueBlockedWork(work, deltaBlocker);

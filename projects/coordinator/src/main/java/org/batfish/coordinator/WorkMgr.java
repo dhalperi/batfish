@@ -93,7 +93,6 @@ import org.batfish.common.util.BatfishObjectMapper;
 import org.batfish.common.util.CollectionUtil;
 import org.batfish.common.util.CommonUtil;
 import org.batfish.common.util.UnzipUtility;
-import org.batfish.common.util.WorkItemBuilder;
 import org.batfish.coordinator.AnalysisMetadataMgr.AnalysisType;
 import org.batfish.coordinator.WorkDetails.WorkType;
 import org.batfish.coordinator.WorkQueueMgr.QueueType;
@@ -507,24 +506,24 @@ public class WorkMgr extends AbstractCoordinator {
   }
 
   WorkDetails computeWorkDetails(WorkItem workItem) throws IOException {
-    String referenceSnapshotName = WorkItemBuilder.getReferenceSnapshotName(workItem);
-    String questionName = WorkItemBuilder.getQuestionName(workItem);
-    String analysisName = WorkItemBuilder.getAnalysisName(workItem);
+    String referenceSnapshotName = WorkItem.getReferenceSnapshotName(workItem);
+    String questionName = WorkItem.getQuestionName(workItem);
+    String analysisName = WorkItem.getAnalysisName(workItem);
 
     WorkType workType = WorkType.UNKNOWN;
 
-    if (WorkItemBuilder.isParsingWorkItem(workItem)) {
+    if (WorkItem.isParsingWorkItem(workItem)) {
       workType = WorkType.PARSING;
     }
 
-    if (WorkItemBuilder.isDataplaningWorkItem(workItem)) {
+    if (WorkItem.isDataplaningWorkItem(workItem)) {
       if (workType != WorkType.UNKNOWN) {
         throw new BatfishException("Cannot do composite work. Separate PARSING and DATAPLANING.");
       }
       workType = WorkType.DATAPLANING;
     }
 
-    if (WorkItemBuilder.isAnsweringWorkItem(workItem)) {
+    if (WorkItem.isAnsweringWorkItem(workItem)) {
       if (workType != WorkType.UNKNOWN) {
         throw new BatfishException("Cannot do composite work. Separate ANSWER from other work.");
       }
@@ -538,7 +537,7 @@ public class WorkMgr extends AbstractCoordinator {
                   : WorkType.PARSING_DEPENDENT_ANSWERING;
     }
 
-    if (WorkItemBuilder.isAnalyzingWorkItem(workItem)) {
+    if (WorkItem.isAnalyzingWorkItem(workItem)) {
       if (workType != WorkType.UNKNOWN) {
         throw new BatfishException("Cannot do composite work. Separate ANALYZE from other work.");
       }
@@ -568,7 +567,7 @@ public class WorkMgr extends AbstractCoordinator {
             .setNetworkId(networkId)
             .setSnapshotId(_idManager.getSnapshotId(workItem.getSnapshot(), networkId).get())
             .setWorkType(workType)
-            .setIsDifferential(WorkItemBuilder.isDifferential(workItem));
+            .setIsDifferential(WorkItem.isDifferential(workItem));
     if (referenceSnapshotName != null) {
       builder.setReferenceSnapshotId(
           _idManager.getSnapshotId(referenceSnapshotName, networkId).get());
@@ -1711,13 +1710,12 @@ public class WorkMgr extends AbstractCoordinator {
   List<WorkItem> getAutoWorkQueue(String networkName, String testrigName) {
     List<WorkItem> autoWorkQueue = new LinkedList<>();
 
-    WorkItem parseWork = WorkItemBuilder.getWorkItemParse(networkName, testrigName);
+    WorkItem parseWork = WorkItem.getWorkItemParse(networkName, testrigName);
     autoWorkQueue.add(parseWork);
 
     Set<String> analysisNames = listAnalyses(networkName, AnalysisType.ALL);
     for (String analysis : analysisNames) {
-      WorkItem analyzeWork =
-          WorkItemBuilder.getWorkItemRunAnalysis(analysis, networkName, testrigName);
+      WorkItem analyzeWork = WorkItem.getWorkItemRunAnalysis(analysis, networkName, testrigName);
       autoWorkQueue.add(analyzeWork);
     }
     return autoWorkQueue;
