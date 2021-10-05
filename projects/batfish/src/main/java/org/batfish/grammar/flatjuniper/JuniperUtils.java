@@ -1,4 +1,4 @@
-package org.batfish.common.util;
+package org.batfish.grammar.flatjuniper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.batfish.common.BatfishException;
+import org.batfish.common.util.CommonUtil;
 
 /**
  * This class is a derivative work based on the perl module Crypt-Juniper by Kevin Brintnall.
@@ -15,7 +16,7 @@ import org.batfish.common.BatfishException;
  * Brintnall on 2015/12/04. @see <a
  * href=http://search.cpan.org/~kbrint/Crypt-Juniper/lib/Crypt/Juniper.pm></a>
  */
-public final class JuniperUtils {
+final class JuniperUtils {
 
   private static final JuniperUtils INSTANCE = new JuniperUtils();
 

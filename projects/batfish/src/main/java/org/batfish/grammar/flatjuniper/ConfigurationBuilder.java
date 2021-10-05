@@ -140,7 +140,6 @@ import org.batfish.common.Warnings;
 import org.batfish.common.Warnings.ParseWarning;
 import org.batfish.common.WillNotCommitException;
 import org.batfish.common.util.CommonUtil;
-import org.batfish.common.util.JuniperUtils;
 import org.batfish.datamodel.AaaAuthenticationLoginList;
 import org.batfish.datamodel.AsPath;
 import org.batfish.datamodel.AsSet;
