@@ -201,7 +201,8 @@ public class RoutesAnswererUtilTest {
             null,
             RoutingProtocolSpecifier.ALL_PROTOCOLS_SPECIFIER,
             ".*",
-            null);
+            layer3,
+            fai);
     assertThat(
         actual,
         contains(

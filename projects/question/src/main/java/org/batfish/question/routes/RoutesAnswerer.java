@@ -31,6 +31,7 @@ import org.batfish.common.util.InterfaceNameComparator;
 import org.batfish.datamodel.DataPlane;
 import org.batfish.datamodel.Ip;
 import org.batfish.datamodel.Prefix;
+import org.batfish.datamodel.Topology;
 import org.batfish.datamodel.answers.AnswerElement;
 import org.batfish.datamodel.answers.Schema;
 import org.batfish.datamodel.questions.BgpRouteStatus;
@@ -103,8 +104,7 @@ public class RoutesAnswerer extends Answerer {
     Prefix network = question.getNetwork();
     RoutingProtocolSpecifier protocolSpec = question.getRoutingProtocolSpecifier();
     String vrfRegex = question.getVrfs();
-    Map<Ip, Set<String>> ipOwners =
-        _batfish.getTopologyProvider().getIpOwners(snapshot).getNodeOwners(true);
+    Topology layer3 = _batfish.getTopologyProvider().getLayer3Topology(snapshot);
     boolean bgpMultipathBest = expandedBgpRouteStatuses.contains(BEST);
     boolean bgpBackup = expandedBgpRouteStatuses.contains(BACKUP);
     List<Row> rows = new ArrayList<>();
@@ -161,9 +161,7 @@ public class RoutesAnswerer extends Answerer {
         rows.sort(BGP_COMPARATOR);
         break;
       case MAIN:
-        rows.addAll(
-            getMainRibRoutes(
-                dp.getRibs(), matchingNodes, network, protocolSpec, vrfRegex, ipOwners));
+        rows.addAll(getMainRibRoutes(dp, matchingNodes, network, protocolSpec, vrfRegex, layer3));
         rows.sort(MAIN_RIB_COMPARATOR);
         break;
       default:

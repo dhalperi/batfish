@@ -51,23 +51,39 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import org.apache.commons.lang3.StringUtils;
 import org.batfish.common.BatfishException;
+import org.batfish.common.bdd.BDDPacket;
+import org.batfish.common.bdd.IpSpaceToBDD;
 import org.batfish.datamodel.AbstractRoute;
 import org.batfish.datamodel.AbstractRouteDecorator;
 import org.batfish.datamodel.Bgpv4Route;
+import org.batfish.datamodel.DataPlane;
+import org.batfish.datamodel.EmptyIpSpace;
 import org.batfish.datamodel.EvpnRoute;
+import org.batfish.datamodel.Fib;
+import org.batfish.datamodel.FibEntry;
+import org.batfish.datamodel.FibForward;
+import org.batfish.datamodel.FibNextVrf;
+import org.batfish.datamodel.FibNullRoute;
+import org.batfish.datamodel.ForwardingAnalysis;
 import org.batfish.datamodel.GenericRib;
 import org.batfish.datamodel.Ip;
+import org.batfish.datamodel.IpSpace;
 import org.batfish.datamodel.Prefix;
 import org.batfish.datamodel.Route;
+import org.batfish.datamodel.Topology;
 import org.batfish.datamodel.bgp.community.Community;
+import org.batfish.datamodel.collections.NodeInterfacePair;
 import org.batfish.datamodel.pojo.Node;
 import org.batfish.datamodel.questions.BgpRouteStatus;
 import org.batfish.datamodel.table.ColumnMetadata;
 import org.batfish.datamodel.table.Row;
 import org.batfish.datamodel.table.Row.RowBuilder;
 import org.batfish.datamodel.table.TableDiff;
+import org.batfish.datamodel.visitors.FibActionVisitor;
 import org.batfish.question.routes.DiffRoutesOutput.KeyPresenceStatus;
 import org.batfish.question.routes.RoutesQuestion.RibProtocol;
 import org.batfish.specifier.RoutingProtocolSpecifier;
@@ -119,6 +135,84 @@ public class RoutesAnswererUtil {
     }
   }
 
+  static @Nonnull Set<String> computeNextHopNodes(
+      AbstractRoute route,
+      Fib fib,
+      String hostname,
+      Topology layer3,
+      ForwardingAnalysis fai,
+      IpSpaceToBDD ipSpaceToBDD) {
+    Set<String> ret = new TreeSet<>();
+    for (FibEntry entry : fib.allEntries()) {
+      if (!entry.getTopLevelRoute().equals(route)) {
+        continue;
+      }
+
+      entry
+          .getAction()
+          .accept(
+              new FibActionVisitor<Void>() {
+                @Override
+                public Void visitFibForward(FibForward fibForward) {
+                  String ifname = fibForward.getInterfaceName();
+                  NodeInterfacePair sender = NodeInterfacePair.of(hostname, ifname);
+                  Ip arpIp = fibForward.getArpIp();
+                  IpSpace matchingSpace =
+                      fib.getMatchingIps().getOrDefault(route.getNetwork(), EmptyIpSpace.INSTANCE);
+                  if (ipSpaceToBDD.visit(matchingSpace).isZero()) {
+                    ret.add("This entry will not actually be used for forwarding");
+                    return null;
+                  }
+                  if (!arpIp.equals(Route.UNSET_ROUTE_NEXT_HOP_IP)) {
+                    matchingSpace = arpIp.toIpSpace();
+                  }
+                  addNextHopNodes(sender, matchingSpace, layer3, fai, ret, ipSpaceToBDD);
+                  return null;
+                }
+
+                @Override
+                public Void visitFibNextVrf(FibNextVrf fibNextVrf) {
+                  // Next VRF, no next hop node here.
+                  ret.add("Depends on next VRF");
+                  return null;
+                }
+
+                @Override
+                public Void visitFibNullRoute(FibNullRoute fibNullRoute) {
+                  // Null route, no next hop node.
+                  return null;
+                }
+              });
+    }
+    return ImmutableSet.copyOf(ret);
+  }
+
+  private static void addNextHopNodes(
+      NodeInterfacePair sender,
+      IpSpace arpIps,
+      Topology layer3,
+      ForwardingAnalysis fai,
+      Set<String> known,
+      IpSpaceToBDD ipSpaceToBDD) {
+    SortedSet<NodeInterfacePair> neighbors = layer3.getNeighbors(sender);
+    if (neighbors.isEmpty()) {
+      return;
+    }
+    for (NodeInterfacePair neighbor : neighbors) {
+      if (known.contains(neighbor.getHostname())) {
+        // a different interface on the same neighbor, but adds no new info.
+        continue;
+      }
+      IpSpace neighborReplies =
+          fai.getArpReplies()
+              .getOrDefault(neighbor.getHostname(), ImmutableMap.of())
+              .getOrDefault(neighbor.getInterface(), EmptyIpSpace.INSTANCE);
+      if (ipSpaceToBDD.visit(arpIps).andSat(ipSpaceToBDD.visit(neighborReplies))) {
+        known.add(neighbor.getHostname());
+      }
+    }
+  }
+
   /** Compute the next hop node for a given next hop IP. */
   @Nullable
   static String computeNextHopNode(
@@ -137,45 +231,55 @@ public class RoutesAnswererUtil {
   /**
    * Returns a {@link Multiset} of {@link Row}s for all routes present in all RIBs
    *
-   * @param ribs {@link Map} representing all RIBs of all nodes
+   * @param dp the {@link DataPlane} for the given snapshot
    * @param matchingNodes {@link Set} of hostnames of nodes whose routes are to be returned
    * @param network {@link Prefix} of the network used to filter the routes
    * @param protocolSpec {@link RoutingProtocolSpecifier} used to filter the routes
    * @param vrfRegex Regex used to filter the VRF of routes
-   * @param ipOwners {@link Map} of {@link Ip} to {@link Set} of owner nodes
+   * @param layer3 the layer3 topology for the given snapshot
    * @return {@link Multiset} of {@link Row}s representing the routes
    */
   static <T extends AbstractRouteDecorator> Multiset<Row> getMainRibRoutes(
-      SortedMap<String, SortedMap<String, GenericRib<T>>> ribs,
+      DataPlane dp,
       Set<String> matchingNodes,
       @Nullable Prefix network,
       RoutingProtocolSpecifier protocolSpec,
       String vrfRegex,
-      @Nullable Map<Ip, Set<String>> ipOwners) {
+      Topology layer3) {
     Multiset<Row> rows = HashMultiset.create();
     Pattern compiledVrfRegex = Pattern.compile(vrfRegex);
     Map<String, ColumnMetadata> columnMetadataMap =
         getTableMetadata(RibProtocol.MAIN).toColumnMap();
-    ribs.forEach(
-        (node, vrfMap) -> {
-          if (matchingNodes.contains(node)) {
-            vrfMap.forEach(
-                (vrfName, rib) -> {
-                  if (compiledVrfRegex.matcher(vrfName).matches()) {
-                    rib.getRoutes().stream()
-                        .filter(
-                            route ->
-                                (network == null || network.equals(route.getNetwork()))
-                                    && protocolSpec.getProtocols().contains(route.getProtocol()))
-                        .forEach(
-                            route ->
-                                rows.add(
-                                    abstractRouteToRow(
-                                        node, vrfName, route, columnMetadataMap, ipOwners)));
-                  }
-                });
-          }
-        });
+    BDDPacket pkt = new BDDPacket();
+    dp.getRibs()
+        .forEach(
+            (node, vrfMap) -> {
+              if (matchingNodes.contains(node)) {
+                vrfMap.forEach(
+                    (vrfName, rib) -> {
+                      if (compiledVrfRegex.matcher(vrfName).matches()) {
+                        rib.getRoutes().stream()
+                            .filter(
+                                route ->
+                                    (network == null || network.equals(route.getNetwork()))
+                                        && protocolSpec
+                                            .getProtocols()
+                                            .contains(route.getProtocol()))
+                            .forEach(
+                                route ->
+                                    rows.add(
+                                        abstractRouteToRow(
+                                            node,
+                                            vrfName,
+                                            route,
+                                            columnMetadataMap,
+                                            layer3,
+                                            dp,
+                                            pkt.getDstIpSpaceToBDD())));
+                      }
+                    });
+              }
+            });
     return rows;
   }
 
@@ -276,6 +380,9 @@ public class RoutesAnswererUtil {
    * @param vrfName {@link String} name of the VRF containing the route
    * @param abstractRoute {@link AbstractRoute} to convert
    * @param columnMetadataMap Column metadata of the columns for this {@link Row} c
+   * @param layer3
+   * @param dp
+   * @param ipSpaceToBDD
    * @return {@link Row} representing the {@link AbstractRoute}
    */
   private static Row abstractRouteToRow(
@@ -283,19 +390,26 @@ public class RoutesAnswererUtil {
       String vrfName,
       AbstractRoute abstractRoute,
       Map<String, ColumnMetadata> columnMetadataMap,
-      @Nullable Map<Ip, Set<String>> ipOwners) {
+      Topology layer3,
+      DataPlane dp,
+      IpSpaceToBDD ipSpaceToBDD) {
     // If the route's next hop IP is for internal use, do not show it in the row
     Ip nextHopIp =
         INTERNAL_USE_IPS.contains(abstractRoute.getNextHopIp())
             ? null
             : abstractRoute.getNextHopIp();
+    Fib fib = dp.getFibs().get(hostName).get(vrfName);
+    Set<String> nodes =
+        computeNextHopNodes(
+            abstractRoute, fib, hostName, layer3, dp.getForwardingAnalysis(), ipSpaceToBDD);
+    String nhNode = nodes.isEmpty() ? null : StringUtils.join(nodes, ", ");
     return Row.builder(columnMetadataMap)
         .put(COL_NODE, new Node(hostName))
         .put(COL_VRF_NAME, vrfName)
         .put(COL_NETWORK, abstractRoute.getNetwork())
         .put(COL_NEXT_HOP_IP, nextHopIp)
         .put(COL_NEXT_HOP_INTERFACE, abstractRoute.getNextHopInterface())
-        .put(COL_NEXT_HOP, computeNextHopNode(abstractRoute.getNextHopIp(), ipOwners))
+        .put(COL_NEXT_HOP, nhNode)
         .put(COL_PROTOCOL, abstractRoute.getProtocol())
         .put(
             COL_TAG,

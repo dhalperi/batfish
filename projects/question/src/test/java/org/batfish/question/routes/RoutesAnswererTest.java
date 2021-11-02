@@ -97,7 +97,8 @@ public class RoutesAnswererTest {
             null,
             RoutingProtocolSpecifier.ALL_PROTOCOLS_SPECIFIER,
             ".*",
-            null);
+            layer3,
+            fai);
 
     assertThat(actual.entrySet(), hasSize(0));
   }
@@ -129,7 +130,8 @@ public class RoutesAnswererTest {
             Prefix.create(Ip.parse("2.2.2.0"), 24),
             RoutingProtocolSpecifier.ALL_PROTOCOLS_SPECIFIER,
             ".*",
-            null);
+            layer3,
+            fai);
 
     assertThat(actual, hasSize(1));
     assertThat(
@@ -158,7 +160,8 @@ public class RoutesAnswererTest {
             null,
             RoutingProtocolSpecifier.ALL_PROTOCOLS_SPECIFIER,
             ".*",
-            null);
+            layer3,
+            fai);
 
     assertThat(actual, hasSize(0));
   }
@@ -181,7 +184,13 @@ public class RoutesAnswererTest {
 
     Multiset<Row> actual =
         getMainRibRoutes(
-            ribs, ImmutableSet.of("n1"), null, new RoutingProtocolSpecifier("static"), ".*", null);
+            ribs,
+            ImmutableSet.of("n1"),
+            null,
+            new RoutingProtocolSpecifier("static"),
+            ".*",
+            layer3,
+            fai);
 
     assertThat(actual, hasSize(1));
     assertThat(
@@ -218,7 +227,8 @@ public class RoutesAnswererTest {
             null,
             RoutingProtocolSpecifier.ALL_PROTOCOLS_SPECIFIER,
             "^not.*",
-            null);
+            layer3,
+            fai);
 
     assertThat(actual, hasSize(1));
     assertThat(
