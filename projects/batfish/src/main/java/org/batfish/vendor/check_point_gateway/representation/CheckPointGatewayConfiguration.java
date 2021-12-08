@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -46,6 +47,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.batfish.common.VendorConversionException;
 import org.batfish.common.Warnings;
 import org.batfish.datamodel.AclAclLine;
@@ -108,6 +111,7 @@ import org.batfish.vendor.check_point_management.Uid;
 import org.batfish.vendor.check_point_management.UnknownTypedManagementObject;
 
 public class CheckPointGatewayConfiguration extends VendorConfiguration {
+  private static final Logger LOGGER = LogManager.getLogger(CheckPointGatewayConfiguration.class);
 
   public static final String VRF_NAME = "default";
   public static final String INTERFACE_ACL_NAME = "~INTERFACE_ACL~";
@@ -526,11 +530,48 @@ public class CheckPointGatewayConfiguration extends VendorConfiguration {
 
     // First match any manual rules. If a manual rule is matched, no other rules can be matched,
     // regardless of what translations the manual rule applies, so return.
-    manualRules.forEach(
-        rule ->
-            getManualRuleStatement(
-                    rule, serviceToMatchExpr, addressSpaceToMatchExpr, objects, returnFibLookup)
-                .ifPresent(statements::add));
+
+    // Also, condense sequential rulesd that share the same original source address, for VI
+    // performance
+    Uid lastMatchSourceUid = null;
+    PacketMatchExpr lastMatchSourceAddress = null;
+    List<Statement> currentSourceUidStatements = new LinkedList<>();
+    for (NatRule manualRule : manualRules) {
+      Optional<Statement> st =
+          getManualRuleStatement(
+              manualRule, serviceToMatchExpr, addressSpaceToMatchExpr, objects, returnFibLookup);
+      if (!st.isPresent()) {
+        continue;
+      }
+      // Since we got here, we know that the UID corresponds to a valid address space
+      if (!manualRule.getOriginalSource().equals(lastMatchSourceUid)) {
+        if (!currentSourceUidStatements.isEmpty()) {
+          LOGGER.info(
+              "{}: Combining {} xforms for UID {}",
+              _hostname,
+              currentSourceUidStatements.size(),
+              lastMatchSourceUid);
+          statements.add(
+              currentSourceUidStatements.size() == 1
+                  ? currentSourceUidStatements.get(0)
+                  : new If(lastMatchSourceAddress, currentSourceUidStatements));
+          currentSourceUidStatements.clear();
+        }
+        lastMatchSourceUid = manualRule.getOriginalSource();
+        lastMatchSourceAddress =
+            new PacketMatchExpr(
+                addressSpaceToMatchExpr.convertSource(
+                    (AddressSpace) objects.get(lastMatchSourceUid)));
+      }
+      currentSourceUidStatements.add(st.get());
+    }
+    if (!currentSourceUidStatements.isEmpty()) {
+      statements.add(
+          currentSourceUidStatements.size() == 1
+              ? currentSourceUidStatements.get(0)
+              : new If(lastMatchSourceAddress, currentSourceUidStatements));
+      currentSourceUidStatements.clear();
+    }
 
     // Convert automatic NAT rules
     if (!autoHideNatObjects.isEmpty() || !autoStaticNatObjects.isEmpty()) {
