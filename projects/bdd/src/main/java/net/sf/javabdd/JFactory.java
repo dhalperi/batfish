@@ -599,7 +599,7 @@ public final class JFactory extends BDDFactory {
   private boolean bddrunning; /* Flag - package initialized */
   private int bdderrorcond; /* Some error condition */
   private int bddnodesize; /* Number of allocated nodes */
-  private int bddmaxnodesize; /* Maximum allowed number of nodes */
+  private int bddmaxnodesize = INT_MAX / __node_size; /* Maximum allowed number of nodes */
   private int bddmaxnodeincrease; /* Max. # of nodes used to inc. table */
   private int[] bddnodes; /* All of the bdd nodes */
   private int bddfreepos; /* First free node */
@@ -3748,6 +3748,7 @@ public final class JFactory extends BDDFactory {
 
     /* Any free nodes to use ? */
     if (bddfreepos == 0) {
+      long startGCResize = System.currentTimeMillis();
       if (bdderrorcond != 0) {
         return 0;
       }
@@ -3755,10 +3756,12 @@ public final class JFactory extends BDDFactory {
       /* Try to allocate more nodes */
       bdd_gbc();
 
-      if ((bddfreenum * 100) / bddnodesize <= minfreenodes) {
+      if ((bddfreenum * 100L) / bddnodesize <= minfreenodes) {
         bdd_noderesize(true);
         hash2 = NODEHASH(level, low, high);
       }
+      double seconds = (System.currentTimeMillis() - startGCResize) / 1000.0;
+      LOGGER.info("Garbage collection (and resizing?) took {} seconds", seconds);
 
       /* Panic if that is not possible */
       if (bddfreepos == 0) {
@@ -3813,6 +3816,11 @@ public final class JFactory extends BDDFactory {
       }
     }
 
+    if (newsize < 0 || newsize > INT_MAX / __node_size) {
+      // prevent integer overflow
+      newsize = INT_MAX / __node_size;
+    }
+
     return doResize(doRehash, oldsize, newsize);
   }
 
@@ -3827,11 +3835,11 @@ public final class JFactory extends BDDFactory {
 
     newsize = bdd_prime_lte(newsize);
 
-    if (oldsize > newsize) {
+    if (oldsize >= newsize) {
       return 0;
     }
 
-    resize_handler(oldsize, newsize);
+    LOGGER.info("Resizing node table from {} to {}", oldsize, newsize);
 
     int[] newnodes;
     newnodes = new int[newsize * __node_size];
@@ -3862,6 +3870,7 @@ public final class JFactory extends BDDFactory {
 
     bddresized = true;
 
+    LOGGER.info("Done resizing");
     return 0;
   }
 
