@@ -47,6 +47,14 @@ public final class EraseAndSet implements Transition {
   }
 
   @Override
+  public Transition inUniverse(BDD universe) {
+    if (_setValue.andSat(universe)) {
+      return this;
+    }
+    return Transitions.ZERO;
+  }
+
+  @Override
   public BDD transitForward(BDD bdd) {
     return _setValue.isOne() ? bdd.exist(_eraseVars) : bdd.exist(_eraseVars).andEq(_setValue);
   }
