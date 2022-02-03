@@ -707,22 +707,37 @@ public final class BDDReachabilityAnalysisFactory {
    * These edges do not depend on the query. Compute them separately so that we can later cache them
    * across queries if we want to.
    */
-  private Stream<Edge> generateEdges() {
-    return Streams.concat(
-        generateRules_PreInInterface_NodeDropAclIn(),
-        generateRules_PreInInterface_PostInInterface(),
-        generateRules_PreInInterface_PacketPolicy(),
-        generateRules_PostInInterface_NodeDropAclIn(),
-        generateRules_PostInInterface_PostInVrf(),
-        generateRules_PreOutEdge_NodeDropAclOut(),
-        generateRules_PreOutEdge_PreOutEdgePostNat(),
-        generateRules_PreOutEdgePostNat_NodeDropAclOut(),
-        generateRules_PreOutEdgePostNat_PreInInterface(),
-        generateRules_PreOutInterfaceDisposition_SetupSessionDisposition(),
-        generateRules_SetupSessionDisposition_NodeInterfaceDisposition(),
-        generateRules_PreOutInterfaceDisposition_NodeDropAclOut(),
-        generateRules_VrfAccept_NodeAccept(),
-        generateFibRules());
+  private Stream<Edge> generateEdges(BDD universe) {
+    Stream<Edge> edges =
+        Streams.concat(
+            generateRules_PreInInterface_NodeDropAclIn(),
+            generateRules_PreInInterface_PostInInterface(),
+            generateRules_PreInInterface_PacketPolicy(),
+            generateRules_PostInInterface_NodeDropAclIn(),
+            generateRules_PostInInterface_PostInVrf(),
+            generateRules_PreOutEdge_NodeDropAclOut(),
+            generateRules_PreOutEdge_PreOutEdgePostNat(),
+            generateRules_PreOutEdgePostNat_NodeDropAclOut(),
+            generateRules_PreOutEdgePostNat_PreInInterface(),
+            generateRules_PreOutInterfaceDisposition_SetupSessionDisposition(),
+            generateRules_SetupSessionDisposition_NodeInterfaceDisposition(),
+            generateRules_PreOutInterfaceDisposition_NodeDropAclOut(),
+            generateRules_VrfAccept_NodeAccept(),
+            generateFibRules());
+    if (universe.isOne()) {
+      return edges;
+    }
+    return edges
+        .map(
+            e -> {
+              Transition inUniverse = e.getTransition().inUniverse(universe);
+              if (inUniverse == e.getTransition()) {
+                return e;
+              }
+              System.err.println(String.format("Changed %s to %s", e, inUniverse));
+              return new Edge(e.getPreState(), e.getPostState(), inUniverse);
+            })
+        .filter(e -> e.getTransition() != ZERO);
   }
 
   private @Nonnull Stream<Edge> generateFibRules() {
@@ -1346,7 +1361,8 @@ public final class BDDReachabilityAnalysisFactory {
 
   public BDDLoopDetectionAnalysis bddLoopDetectionAnalysis(IpSpaceAssignment srcIpSpaceAssignment) {
     Map<StateExpr, BDD> ingressLocationStates = rootConstraints(srcIpSpaceAssignment, _one, false);
-    Stream<Edge> edges = Stream.concat(generateEdges(), generateRootEdges(ingressLocationStates));
+    Stream<Edge> edges =
+        Stream.concat(generateEdges(_one), generateRootEdges(ingressLocationStates));
     return new BDDLoopDetectionAnalysis(_bddPacket, edges, ingressLocationStates.keySet());
   }
 
@@ -1419,7 +1435,8 @@ public final class BDDReachabilityAnalysisFactory {
     Map<StateExpr, BDD> roots = rootConstraints(srcIpSpaceAssignment, initialHeaderSpaceBdd, false);
 
     List<Edge> sharedEdges =
-        Stream.concat(generateEdges(), generateRootEdges(roots)).collect(Collectors.toList());
+        Stream.concat(generateEdges(finalHeaderSpaceBdd), generateRootEdges(roots))
+            .collect(Collectors.toList());
 
     Stream<Edge> reachabilityEdges =
         Streams.concat(
@@ -1504,7 +1521,7 @@ public final class BDDReachabilityAnalysisFactory {
 
       Stream<Edge> edgeStream =
           Streams.concat(
-              generateEdges(),
+              generateEdges(finalHeaderSpaceBdd),
               generateRootEdges(roots),
               generateDispositionEdges(finalNodes),
               generateQueryEdges(actions));
@@ -1631,7 +1648,8 @@ public final class BDDReachabilityAnalysisFactory {
                       _lastHopMgr,
                       _bddOutgoingOriginalFlowFilterManagers,
                       _aclPermitBDDs,
-                      Stream.concat(generateEdges(), generateDispositionEdges(_configs.keySet())),
+                      Stream.concat(
+                          generateEdges(_one), generateDispositionEdges(_configs.keySet())),
                       initializedSessions,
                       _bddFibGenerator)),
               generateRootEdges(returnPassOrigBdds),

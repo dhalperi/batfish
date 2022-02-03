@@ -80,6 +80,7 @@ public class BDDReachabilityGraphOptimizer {
     _preStates = HashMultimap.create();
     _postStates = HashMultimap.create();
     for (Edge edge : edges) {
+      assert edge.getTransition() != ZERO;
       _edges.put(edge.getPreState(), edge.getPostState(), edge.getTransition());
       _preStates.put(edge.getPostState(), edge.getPreState());
       _postStates.put(edge.getPreState(), edge.getPostState());

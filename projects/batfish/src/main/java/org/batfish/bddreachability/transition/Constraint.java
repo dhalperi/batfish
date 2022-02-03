@@ -48,6 +48,14 @@ public final class Constraint implements Transition {
   }
 
   @Override
+  public Transition inUniverse(BDD universe) {
+    if (universe.andSat(_constraint)) {
+      return this;
+    }
+    return Transitions.ZERO;
+  }
+
+  @Override
   public String toString() {
     return MoreObjects.toStringHelper(Constraint.class).add("topVar", _constraint.var()).toString();
   }

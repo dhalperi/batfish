@@ -1,9 +1,11 @@
 package org.batfish.bddreachability.transition;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static org.batfish.bddreachability.transition.Transitions.ZERO;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
 import java.util.List;
 import net.sf.javabdd.BDD;
 
@@ -21,6 +23,24 @@ public final class Composite implements Transition {
         transitions.size() != 1,
         "Cannot compose 1 Transition. Use that transition directly instead.");
     _transitions = ImmutableList.copyOf(transitions);
+  }
+
+  @Override
+  public Transition inUniverse(BDD universe) {
+    List<Transition> inner = new ArrayList<>(_transitions.size());
+    boolean changed = false;
+    for (Transition t : _transitions) {
+      Transition tPrime = t.inUniverse(universe);
+      if (tPrime == ZERO) {
+        return tPrime;
+      }
+      inner.add(tPrime);
+      changed |= tPrime != t;
+    }
+    if (!changed) {
+      return this;
+    }
+    return Transitions.compose(inner.toArray(new Transition[0]));
   }
 
   public List<Transition> getTransitions() {

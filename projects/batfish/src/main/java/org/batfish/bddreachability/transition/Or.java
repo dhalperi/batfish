@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import net.sf.javabdd.BDD;
@@ -29,6 +30,21 @@ public final class Or implements Transition {
 
   public List<Transition> getTransitions() {
     return _transitions;
+  }
+
+  @Override
+  public Transition inUniverse(BDD universe) {
+    List<Transition> inner = new ArrayList<>(_transitions.size());
+    boolean changed = false;
+    for (Transition t : _transitions) {
+      Transition tPrime = t.inUniverse(universe);
+      inner.add(tPrime);
+      changed |= tPrime != t;
+    }
+    if (!changed) {
+      return this;
+    }
+    return Transitions.or(inner.toArray(new Transition[0]));
   }
 
   @Override

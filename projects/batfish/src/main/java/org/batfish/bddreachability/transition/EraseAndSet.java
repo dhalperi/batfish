@@ -47,6 +47,22 @@ public final class EraseAndSet implements Transition {
   }
 
   @Override
+  public Transition inUniverse(BDD universe) {
+    if (!_setValue.andSat(universe)) {
+      return Transitions.ZERO;
+    }
+    BDD erasedUniverse = universe.exist(_eraseVars);
+    if (erasedUniverse.equals(universe)) {
+      // No overlap between erased variables and universe.
+      erasedUniverse.free();
+      return this;
+    }
+    erasedUniverse.free();
+    // WARNING: this would be bad if ever stuck in a fixpoint.
+    return Transitions.compose(Transitions.constraint(universe), this);
+  }
+
+  @Override
   public BDD transitForward(BDD bdd) {
     return _setValue.isOne() ? bdd.exist(_eraseVars) : bdd.exist(_eraseVars).andEq(_setValue);
   }
