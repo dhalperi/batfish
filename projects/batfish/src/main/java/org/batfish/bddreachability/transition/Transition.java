@@ -14,4 +14,8 @@ public interface Transition {
   BDD transitForward(BDD bdd);
 
   BDD transitBackward(BDD bdd);
+
+  default Transition inUniverse(BDD universe) {
+    return this;
+  }
 }
