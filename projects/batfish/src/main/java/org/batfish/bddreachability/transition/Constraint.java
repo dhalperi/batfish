@@ -49,11 +49,6 @@ public final class Constraint implements Transition {
 
   @Override
   public Transition inUniverse(BDD universe) {
-    //    BDD together = universe.and(_constraint);
-    //    if (together.equals(_constraint)) {
-    //      together.free();
-    //    }
-    //    return Transitions.constraint(together);
     if (universe.andSat(_constraint)) {
       return this;
     }
