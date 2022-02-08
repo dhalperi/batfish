@@ -166,7 +166,7 @@ public final class Transitions {
       BDD constraint = ((Constraint) t2).getConstraint();
       return eraseAndSet(vars, value.and(constraint));
     }
-    if (t1 instanceof EraseAndSet && t2 instanceof EraseAndSet) {
+    if (false && t1 instanceof EraseAndSet && t2 instanceof EraseAndSet) {
       EraseAndSet eas1 = (EraseAndSet) t1;
       EraseAndSet eas2 = (EraseAndSet) t2;
       BDD vars1 = eas1.getEraseVars();
