@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="common" pattern="file[.workspace]:projects/batfish-common-protocol//*" />
+</component>

@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="NX-OS" pattern="file[.workspace]:projects/batfish/src/test/resources/org/batfish/grammar/cisco_nxos//*||file[.workspace]:projects/batfish/src/test/java/org/batfish/representation/cisco_nxos//*||file[.workspace]:projects/batfish/src/test/java/org/batfish/grammar/cisco_nxos//*||file[.workspace]:projects/batfish/src/main/antlr4/org/batfish/grammar/cisco_nxos//*||file[.workspace]:projects/batfish/src/main/java/org/batfish/grammar/cisco_nxos//*||file[.workspace]:projects/batfish/src/main/java/org/batfish/representation/cisco_nxos//*" />
+</component>

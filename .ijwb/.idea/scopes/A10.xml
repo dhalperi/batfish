@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="A10" pattern="file[.workspace]:projects/batfish/src/main/antlr4/org/batfish/vendor/a10/grammar//*||file[.workspace]:projects/batfish/src/main/java/org/batfish/vendor/a10/grammar//*||file[.workspace]:projects/batfish/src/main/java/org/batfish/vendor/a10/representation//*||file[.workspace]:projects/batfish/src/test/java/org/batfish/vendor/a10/grammar//*||file[.workspace]:projects/batfish/src/test/java/org/batfish/vendor/a10/representation//*||file[.workspace]:projects/batfish/src/test/resources/org/batfish/vendor/a10/grammar/testconfigs//*" />
+</component>

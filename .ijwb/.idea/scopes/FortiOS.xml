@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="FortiOS" pattern="file[.workspace]:projects/batfish/src/test/resources/org/batfish/grammar/fortios//*||file[.workspace]:projects/batfish/src/test/java/org/batfish/grammar/fortios//*||file[.workspace]:projects/batfish/src/test/java/org/batfish/representation/fortios//*||file[.workspace]:projects/batfish/src/main/java/org/batfish/representation/fortios//*||file[.workspace]:projects/batfish/src/main/java/org/batfish/grammar/fortios//*||file[.workspace]:projects/batfish/src/main/antlr4/org/batfish/grammar/fortios//*" />
+</component>

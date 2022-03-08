@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Arista" pattern="file[.workspace]:projects/batfish/src/main/antlr4/org/batfish/grammar/arista//*||file[.workspace]:projects/batfish/src/main/java/org/batfish/grammar/arista//*||file[.workspace]:projects/batfish/src/main/java/org/batfish/representation/arista//*||file[.workspace]:projects/batfish/src/test/java/org/batfish/grammar/arista//*||file[.workspace]:projects/batfish/src/test/java/org/batfish/representation/arista//*||file[.workspace]:projects/batfish/src/test/resources/org/batfish/grammar/arista//*" />
+</component>
