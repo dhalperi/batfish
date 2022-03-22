@@ -28,7 +28,8 @@ public final class Constraint implements Transition {
     return Objects.equals(_constraint, that._constraint);
   }
 
-  BDD getConstraint() {
+  /** Returns the constraint on this BDD. Still owned by this {@link Constraint}. */
+  public BDD getConstraint() {
     return _constraint;
   }
 

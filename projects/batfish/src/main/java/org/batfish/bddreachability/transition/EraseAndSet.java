@@ -33,11 +33,13 @@ public final class EraseAndSet implements Transition {
     return _eraseVars.equals(other._eraseVars) && _setValue.equals(other._setValue);
   }
 
-  BDD getEraseVars() {
+  /** Returns the variables to be erased. Owned by this {@link EraseAndSet}. */
+  public BDD getEraseVars() {
     return _eraseVars;
   }
 
-  BDD getSetValue() {
+  /** Returns the value set after erasure. Owned by this {@link EraseAndSet}. */
+  public BDD getSetValue() {
     return _setValue;
   }
 
