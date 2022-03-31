@@ -3,7 +3,6 @@ package org.batfish.common.bdd;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.batfish.common.util.CollectionUtil.toImmutableMap;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -43,6 +42,9 @@ import org.batfish.datamodel.acl.TrueExpr;
 /**
  * Converts {@link IpAccessList IpAccessLists} or {@link org.batfish.datamodel.acl.AclLineMatchExpr
  * AclLineMatchExprs} to {@link BDD}.
+ *
+ * <p>For all implementations, it must be the case that all returned {@link BDD} objects are owned
+ * by the caller and may be freed.
  */
 @ParametersAreNonnullByDefault
 public abstract class IpAccessListToBdd {
@@ -165,8 +167,7 @@ public abstract class IpAccessListToBdd {
     return toPermitAndDenyBdds(acl).getPermitBdd();
   }
 
-  @VisibleForTesting
-  public PermitAndDenyBdds toPermitAndDenyBdds(IpAccessList acl) {
+  private PermitAndDenyBdds toPermitAndDenyBdds(IpAccessList acl) {
     return _bddOps.bddAclLines(
         acl.getLines().stream()
             .map(this::toPermitAndDenyBdds)
@@ -225,7 +226,7 @@ public abstract class IpAccessListToBdd {
     /* AclLineMatchExpr visit methods */
 
     @Override
-    public final BDD visitAndMatchExpr(AndMatchExpr andMatchExpr) {
+    public BDD visitAndMatchExpr(AndMatchExpr andMatchExpr) {
       return _bddOps.and(
           andMatchExpr.getConjuncts().stream()
               .map(IpAccessListToBdd.this::toBdd)
@@ -238,17 +239,17 @@ public abstract class IpAccessListToBdd {
     }
 
     @Override
-    public final BDD visitFalseExpr(FalseExpr falseExpr) {
+    public BDD visitFalseExpr(FalseExpr falseExpr) {
       return _factory.zero();
     }
 
     @Override
-    public final BDD visitMatchHeaderSpace(MatchHeaderSpace matchHeaderSpace) {
+    public BDD visitMatchHeaderSpace(MatchHeaderSpace matchHeaderSpace) {
       return _headerSpaceToBDD.toBDD(matchHeaderSpace.getHeaderspace());
     }
 
     @Override
-    public final BDD visitMatchSrcInterface(MatchSrcInterface matchSrcInterface) {
+    public BDD visitMatchSrcInterface(MatchSrcInterface matchSrcInterface) {
       return _bddOps.or(
           matchSrcInterface.getSrcInterfaces().stream()
               .map(_bddSrcManager::getSourceInterfaceBDD)
@@ -256,17 +257,17 @@ public abstract class IpAccessListToBdd {
     }
 
     @Override
-    public final BDD visitNotMatchExpr(NotMatchExpr notMatchExpr) {
+    public BDD visitNotMatchExpr(NotMatchExpr notMatchExpr) {
       return toBdd(notMatchExpr.getOperand()).not();
     }
 
     @Override
-    public final BDD visitOriginatingFromDevice(OriginatingFromDevice originatingFromDevice) {
+    public BDD visitOriginatingFromDevice(OriginatingFromDevice originatingFromDevice) {
       return _bddSrcManager.getOriginatingFromDeviceBDD();
     }
 
     @Override
-    public final BDD visitOrMatchExpr(OrMatchExpr orMatchExpr) {
+    public BDD visitOrMatchExpr(OrMatchExpr orMatchExpr) {
       return _bddOps.or(
           orMatchExpr.getDisjuncts().stream()
               .map(IpAccessListToBdd.this::toBdd)
@@ -274,12 +275,12 @@ public abstract class IpAccessListToBdd {
     }
 
     @Override
-    public final BDD visitPermittedByAcl(PermittedByAcl permittedByAcl) {
+    public BDD visitPermittedByAcl(PermittedByAcl permittedByAcl) {
       return getPermitAndDenyBdds(permittedByAcl.getAclName()).getPermitBdd();
     }
 
     @Override
-    public final BDD visitTrueExpr(TrueExpr trueExpr) {
+    public BDD visitTrueExpr(TrueExpr trueExpr) {
       return _factory.one();
     }
   }

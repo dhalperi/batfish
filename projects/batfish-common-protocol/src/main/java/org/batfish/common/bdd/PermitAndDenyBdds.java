@@ -24,6 +24,19 @@ public final class PermitAndDenyBdds {
   }
 
   /**
+   * Identity function; returns a copy of this {@link PermitAndDenyBdds}.
+   *
+   * @see BDD#id()
+   */
+  public PermitAndDenyBdds id() {
+    PermitAndDenyBdds ret = new PermitAndDenyBdds(_permitBdd.id(), _denyBdd.id());
+    if (_matchBdd != null) {
+      ret._matchBdd = _matchBdd.id();
+    }
+    return ret;
+  }
+
+  /**
    * Returns true if the lines represented by the given {@link PermitAndDenyBdds} can take different
    * actions on the same packet
    */

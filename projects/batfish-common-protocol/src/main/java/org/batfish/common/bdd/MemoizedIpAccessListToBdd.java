@@ -4,6 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Optional;
+import javax.annotation.Nonnull;
 import net.sf.javabdd.BDD;
 import org.batfish.datamodel.AclLine;
 import org.batfish.datamodel.IpAccessList;
@@ -15,8 +16,8 @@ import org.batfish.datamodel.acl.AclLineMatchExpr;
  * {@link IdentityHashMap}.
  */
 public final class MemoizedIpAccessListToBdd extends IpAccessListToBdd {
-  private Map<AclLine, PermitAndDenyBdds> _lineCache = new IdentityHashMap<>();
-  private Map<AclLineMatchExpr, BDD> _exprCache = new IdentityHashMap<>();
+  private final Map<AclLine, PermitAndDenyBdds> _lineCache = new IdentityHashMap<>();
+  private final Map<AclLineMatchExpr, BDD> _exprCache = new IdentityHashMap<>();
 
   public MemoizedIpAccessListToBdd(
       BDDPacket packet,
@@ -27,13 +28,13 @@ public final class MemoizedIpAccessListToBdd extends IpAccessListToBdd {
   }
 
   @Override
-  public PermitAndDenyBdds toPermitAndDenyBdds(AclLine line) {
-    return _lineCache.computeIfAbsent(line, this::convert);
+  public PermitAndDenyBdds toPermitAndDenyBdds(@Nonnull AclLine line) {
+    return _lineCache.computeIfAbsent(line, this::convert).id();
   }
 
   @Override
-  public BDD toBdd(AclLineMatchExpr expr) {
-    return _exprCache.computeIfAbsent(expr, this::convert);
+  public BDD toBdd(@Nonnull AclLineMatchExpr expr) {
+    return _exprCache.computeIfAbsent(expr, this::convert).id();
   }
 
   @VisibleForTesting
