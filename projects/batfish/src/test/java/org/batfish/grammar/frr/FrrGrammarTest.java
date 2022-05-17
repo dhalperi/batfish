@@ -1,6 +1,5 @@
 package org.batfish.grammar.frr;
 
-import static junit.framework.TestCase.assertEquals;
 import static org.batfish.common.matchers.ParseWarningMatchers.hasComment;
 import static org.batfish.common.matchers.ParseWarningMatchers.hasText;
 import static org.batfish.common.matchers.WarningsMatchers.hasParseWarning;
@@ -39,6 +38,7 @@ import static org.hamcrest.Matchers.isA;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -112,7 +112,9 @@ import org.batfish.representation.frr.BgpInterfaceNeighbor;
 import org.batfish.representation.frr.BgpIpNeighbor;
 import org.batfish.representation.frr.BgpNeighbor;
 import org.batfish.representation.frr.BgpNeighbor.RemoteAs;
+import org.batfish.representation.frr.BgpNeighborIpv4UnicastAddressFamily;
 import org.batfish.representation.frr.BgpNeighborIpv4UnicastAddressFamily.RemovePrivateAsMode;
+import org.batfish.representation.frr.BgpNeighborL2vpnEvpnAddressFamily;
 import org.batfish.representation.frr.BgpNeighborSourceAddress;
 import org.batfish.representation.frr.BgpNeighborSourceInterface;
 import org.batfish.representation.frr.BgpNetwork;
@@ -332,12 +334,7 @@ public class FrrGrammarTest {
         "exit-address-family");
 
     assertFalse(
-        _frr.getBgpProcess()
-            .getDefaultVrf()
-            .getNeighbors()
-            .get("N")
-            .getIpv4UnicastAddressFamily()
-            .getActivated());
+        _frr.getBgpProcess().getDefaultVrf().getIpv4UnicastConfiguration("N").getActivated());
   }
 
   @Test
@@ -558,9 +555,10 @@ public class FrrGrammarTest {
         "neighbor n activate",
         "neighbor 1.2.3.4 activate",
         "exit-address-family");
-    Map<String, BgpNeighbor> neighbors = _frr.getBgpProcess().getDefaultVrf().getNeighbors();
-    assertTrue(neighbors.get("n").getL2vpnEvpnAddressFamily().getActivated());
-    assertTrue(neighbors.get("1.2.3.4").getL2vpnEvpnAddressFamily().getActivated());
+    Map<String, BgpNeighborL2vpnEvpnAddressFamily> neighbors =
+        _frr.getBgpProcess().getDefaultVrf().getL2VpnEvpn().getNeighbors();
+    assertTrue(neighbors.get("n").getActivated());
+    assertTrue(neighbors.get("1.2.3.4").getActivated());
   }
 
   @Test
@@ -597,8 +595,8 @@ public class FrrGrammarTest {
         "address-family l2vpn evpn",
         "neighbor n route-reflector-client",
         "exit-address-family");
-    Map<String, BgpNeighbor> neighbors = _frr.getBgpProcess().getDefaultVrf().getNeighbors();
-    assertTrue(neighbors.get("n").getL2vpnEvpnAddressFamily().getRouteReflectorClient());
+    assertTrue(
+        _frr.getBgpProcess().getDefaultVrf().getL2EvpnConfiguration("n").getRouteReflectorClient());
   }
 
   @Test
@@ -611,9 +609,10 @@ public class FrrGrammarTest {
         "   neighbor n activate",
         " address-family l2vpn evpn",
         "   neighbor 1.2.3.4 activate");
-    Map<String, BgpNeighbor> neighbors = _frr.getBgpProcess().getDefaultVrf().getNeighbors();
-    assertTrue(neighbors.get("n").getL2vpnEvpnAddressFamily().getActivated());
-    assertTrue(neighbors.get("1.2.3.4").getL2vpnEvpnAddressFamily().getActivated());
+    Map<String, BgpNeighborL2vpnEvpnAddressFamily> neighbors =
+        _frr.getBgpProcess().getDefaultVrf().getL2VpnEvpn().getNeighbors();
+    assertTrue(neighbors.get("n").getActivated());
+    assertTrue(neighbors.get("1.2.3.4").getActivated());
   }
 
   @Test
@@ -627,9 +626,7 @@ public class FrrGrammarTest {
     assertTrue(
         _frr.getBgpProcess()
             .getDefaultVrf()
-            .getNeighbors()
-            .get("10.0.0.1")
-            .getIpv4UnicastAddressFamily()
+            .getIpv4UnicastConfiguration("10.0.0.1")
             .getNextHopSelf());
   }
 
@@ -647,12 +644,7 @@ public class FrrGrammarTest {
         "neighbor N activate",
         "exit-address-family");
     assertTrue(
-        _frr.getBgpProcess()
-            .getDefaultVrf()
-            .getNeighbors()
-            .get("N")
-            .getIpv4UnicastAddressFamily()
-            .getActivated());
+        _frr.getBgpProcess().getDefaultVrf().getIpv4UnicastConfiguration("N").getActivated());
   }
 
   @Test
@@ -664,12 +656,7 @@ public class FrrGrammarTest {
         "neighbor N allowas-in 5",
         "exit-address-family");
     assertThat(
-        _frr.getBgpProcess()
-            .getDefaultVrf()
-            .getNeighbors()
-            .get("N")
-            .getIpv4UnicastAddressFamily()
-            .getAllowAsIn(),
+        _frr.getBgpProcess().getDefaultVrf().getIpv4UnicastConfiguration("N").getAllowAsIn(),
         equalTo(5));
   }
 
@@ -682,12 +669,7 @@ public class FrrGrammarTest {
         "neighbor N allowas-in",
         "exit-address-family");
     assertThat(
-        _frr.getBgpProcess()
-            .getDefaultVrf()
-            .getNeighbors()
-            .get("N")
-            .getIpv4UnicastAddressFamily()
-            .getAllowAsIn(),
+        _frr.getBgpProcess().getDefaultVrf().getIpv4UnicastConfiguration("N").getAllowAsIn(),
         equalTo(3));
   }
 
@@ -701,12 +683,12 @@ public class FrrGrammarTest {
         "    neighbor N default-originate",
         "    neighbor N2 default-originate route-map RM",
         "  exit-address-family");
-    Map<String, BgpNeighbor> bgpNeighbors = _frr.getBgpProcess().getDefaultVrf().getNeighbors();
-    assertTrue(bgpNeighbors.get("N").getIpv4UnicastAddressFamily().getDefaultOriginate());
-    assertNull(bgpNeighbors.get("N").getIpv4UnicastAddressFamily().getDefaultOriginateRouteMap());
-    assertTrue(bgpNeighbors.get("N2").getIpv4UnicastAddressFamily().getDefaultOriginate());
-    assertEquals(
-        "RM", bgpNeighbors.get("N2").getIpv4UnicastAddressFamily().getDefaultOriginateRouteMap());
+    Map<String, BgpNeighborIpv4UnicastAddressFamily> bgpNeighbors =
+        _frr.getBgpProcess().getDefaultVrf().getIpv4Unicast().getNeighbors();
+    assertTrue(bgpNeighbors.get("N").getDefaultOriginate());
+    assertNull(bgpNeighbors.get("N").getDefaultOriginateRouteMap());
+    assertTrue(bgpNeighbors.get("N2").getDefaultOriginate());
+    assertEquals("RM", bgpNeighbors.get("N2").getDefaultOriginateRouteMap());
   }
 
   @Test
@@ -875,25 +857,19 @@ public class FrrGrammarTest {
     assertThat(
         _frr.getBgpProcess()
             .getDefaultVrf()
-            .getNeighbors()
-            .get("N1")
-            .getIpv4UnicastAddressFamily()
+            .getIpv4UnicastConfiguration("N1")
             .getRemovePrivateAsMode(),
         equalTo(RemovePrivateAsMode.BASIC));
     assertThat(
         _frr.getBgpProcess()
             .getDefaultVrf()
-            .getNeighbors()
-            .get("N2")
-            .getIpv4UnicastAddressFamily()
+            .getIpv4UnicastConfiguration("N2")
             .getRemovePrivateAsMode(),
         equalTo(RemovePrivateAsMode.ALL));
     assertThat(
         _frr.getBgpProcess()
             .getDefaultVrf()
-            .getNeighbors()
-            .get("N3")
-            .getIpv4UnicastAddressFamily()
+            .getIpv4UnicastConfiguration("N3")
             .getRemovePrivateAsMode(),
         equalTo(RemovePrivateAsMode.REPLACE_AS));
   }
@@ -909,9 +885,7 @@ public class FrrGrammarTest {
     assertTrue(
         _frr.getBgpProcess()
             .getDefaultVrf()
-            .getNeighbors()
-            .get("N")
-            .getIpv4UnicastAddressFamily()
+            .getIpv4UnicastConfiguration("N")
             .getRouteReflectorClient());
   }
 
@@ -2046,12 +2020,7 @@ public class FrrGrammarTest {
         "neighbor N route-map R in",
         "exit-address-family");
     assertThat(
-        _frr.getBgpProcess()
-            .getDefaultVrf()
-            .getNeighbors()
-            .get("N")
-            .getIpv4UnicastAddressFamily()
-            .getRouteMapIn(),
+        _frr.getBgpProcess().getDefaultVrf().getIpv4UnicastConfiguration("N").getRouteMapIn(),
         equalTo("R"));
     assertThat(
         getStructureReferences(
@@ -2070,12 +2039,7 @@ public class FrrGrammarTest {
         "neighbor N2 route-map R out",
         "exit-address-family");
     assertThat(
-        _frr.getBgpProcess()
-            .getDefaultVrf()
-            .getNeighbors()
-            .get("N2")
-            .getIpv4UnicastAddressFamily()
-            .getRouteMapOut(),
+        _frr.getBgpProcess().getDefaultVrf().getIpv4UnicastConfiguration("N2").getRouteMapOut(),
         equalTo("R"));
     assertThat(
         getStructureReferences(
