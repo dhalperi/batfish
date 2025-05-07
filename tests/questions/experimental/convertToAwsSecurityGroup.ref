@@ -1,0 +1,7 @@
+{
+  "class" : "org.batfish.question.awssecuritygroup.ConvertToAwsSecurityGroupQuestion",
+  "differential" : false,
+  "filters" : ".*",
+  "nodes" : ".*",
+  "includeOneTableKeys" : true
+}

@@ -1,0 +1,14 @@
+!RANCID-CONTENT-TYPE: cisco-nx
+!
+hostname nxos_aws_udp_icmp_acl
+!
+
+ip access-list acl_udp_simple
+  permit udp 192.168.1.0/24 any eq 53
+  permit udp 10.0.0.0/8 any eq 123
+  permit udp any any eq 161
+
+ip access-list acl_icmp_simple
+  permit icmp 192.168.1.0/24 any echo
+  permit icmp 10.0.0.0/8 any echo-reply
+  permit icmp any any 8 0

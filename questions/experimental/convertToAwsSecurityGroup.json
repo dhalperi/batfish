@@ -1,0 +1,27 @@
+{
+  "class": "org.batfish.question.awssecuritygroup.ConvertToAwsSecurityGroupQuestion",
+  "differential": false,
+  "filters": "${filters}",
+  "nodes": "${nodes}",
+  "instance": {
+    "description": "Converts firewall access lists to AWS security group rules.",
+    "instanceName": "convertToAwsSecurityGroup",
+    "longDescription": "Converts firewall access lists to AWS security group rules. Currently supports Cisco NX-OS access lists.",
+    "orderedVariableNames": ["nodes", "filters"],
+    "tags": ["acl", "aws", "securityGroup", "conversion"],
+    "variables": {
+      "filters": {
+        "description": "Only consider filters that match this specifier",
+        "type": "filterSpec",
+        "optional": true,
+        "displayName": "Filters"
+      },
+      "nodes": {
+        "description": "Only examine filters on nodes matching this specifier",
+        "type": "nodeSpec",
+        "optional": true,
+        "displayName": "Nodes"
+      }
+    }
+  }
+}

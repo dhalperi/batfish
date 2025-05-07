@@ -1,0 +1,11 @@
+package(
+    default_testonly = True,
+    default_visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "awssecuritygroup",
+    srcs = [
+        "//projects/question/src/test/resources/org/batfish/question/awssecuritygroup/testconfigs",
+    ],
+)

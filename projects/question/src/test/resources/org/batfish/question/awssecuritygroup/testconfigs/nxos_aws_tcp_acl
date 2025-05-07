@@ -1,0 +1,13 @@
+!RANCID-CONTENT-TYPE: cisco-nx
+!
+hostname nxos_aws_tcp_acl
+!
+
+ip access-list acl_tcp_simple
+  permit tcp 192.168.1.0/24 any eq 80
+  permit tcp 10.0.0.0/8 any eq 443
+  permit tcp any any eq 22
+
+ip access-list acl_tcp_port_ranges
+  permit tcp 192.168.1.0/24 any range 8000 9000
+  permit tcp 10.0.0.0/8 any range 1024 2048
