@@ -705,13 +705,24 @@ final class BgpRoutingProcess implements RoutingProcess<BgpTopology, BgpRoute<?,
 
   @Override
   public void redistribute(RibDelta<AnnotatedRoute<AbstractRoute>> mainRibDelta) {
-    // A redistribution policy must be defined iff exporting from BGP RIB
-    assert !_exportFromBgpRib ^ _process.getRedistributionPolicy() != null;
+    boolean hasRedistPolicy = _process.getRedistributionPolicy() != null;
 
-    if (!_exportFromBgpRib) {
+    if (!_exportFromBgpRib && !hasRedistPolicy) {
       // Export from main RIB; no local routes in BGP RIB (Juniper-like redistribution)
       assert _mainRibDelta.isEmpty();
       _mainRibDelta = mainRibDelta;
+    } else if (!_exportFromBgpRib) {
+      // Juniper EVPN tenant VRF: redistribute into BGP RIB for getRoutesToLeak() / EVPN type-5
+      // origination, but also keep main RIB delta for normal Junos-style per-peer export.
+      assert _mainRibDelta.isEmpty();
+      _mainRibDelta = mainRibDelta;
+      RoutingPolicy redistributionPolicy =
+          _policies.get(_process.getRedistributionPolicy()).orElse(null);
+      if (redistributionPolicy != null) {
+        for (RouteAdvertisement<AnnotatedRoute<AbstractRoute>> a : mainRibDelta.getActions()) {
+          redistributeRouteToBgpRib(a, redistributionPolicy, REDISTRIBUTE);
+        }
+      }
     } else {
       // Place redistributed routes into our RIB
       RoutingPolicy redistributionPolicy =

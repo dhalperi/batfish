@@ -74,11 +74,13 @@ import org.batfish.datamodel.BgpAuthenticationSettings;
 import org.batfish.datamodel.BgpPassivePeerConfig;
 import org.batfish.datamodel.BgpPeerConfig.Builder;
 import org.batfish.datamodel.BgpProcess;
+import org.batfish.datamodel.Bgpv4ToEvpnVrfLeakConfig;
 import org.batfish.datamodel.ConcreteInterfaceAddress;
 import org.batfish.datamodel.Configuration;
 import org.batfish.datamodel.ConfigurationFormat;
 import org.batfish.datamodel.ConnectedRouteMetadata;
 import org.batfish.datamodel.DeviceModel;
+import org.batfish.datamodel.EvpnToBgpv4VrfLeakConfig;
 import org.batfish.datamodel.ExprAclLine;
 import org.batfish.datamodel.FirewallSessionInterfaceInfo;
 import org.batfish.datamodel.FirewallSessionInterfaceInfo.Action;
@@ -129,8 +131,12 @@ import org.batfish.datamodel.acl.PermittedByAcl;
 import org.batfish.datamodel.acl.TrueExpr;
 import org.batfish.datamodel.bgp.AddressFamilyCapabilities;
 import org.batfish.datamodel.bgp.BgpConfederation;
+import org.batfish.datamodel.bgp.EvpnAddressFamily;
 import org.batfish.datamodel.bgp.Ipv4UnicastAddressFamily;
+import org.batfish.datamodel.bgp.Layer3VniConfig;
+import org.batfish.datamodel.bgp.RouteDistinguisher;
 import org.batfish.datamodel.bgp.community.Community;
+import org.batfish.datamodel.bgp.community.ExtendedCommunity;
 import org.batfish.datamodel.dataplane.rib.RibId;
 import org.batfish.datamodel.isis.IsisInterfaceMode;
 import org.batfish.datamodel.isis.IsisLevel;
@@ -160,7 +166,9 @@ import org.batfish.datamodel.routing_policy.communities.CommunitySetMatchAll;
 import org.batfish.datamodel.routing_policy.communities.CommunitySetMatchExpr;
 import org.batfish.datamodel.routing_policy.communities.CommunitySetNot;
 import org.batfish.datamodel.routing_policy.communities.HasCommunity;
+import org.batfish.datamodel.routing_policy.communities.InputCommunities;
 import org.batfish.datamodel.routing_policy.communities.LiteralCommunitySet;
+import org.batfish.datamodel.routing_policy.communities.MatchCommunities;
 import org.batfish.datamodel.routing_policy.communities.SetCommunities;
 import org.batfish.datamodel.routing_policy.expr.BooleanExpr;
 import org.batfish.datamodel.routing_policy.expr.BooleanExprs;
@@ -855,6 +863,35 @@ public final class JuniperConfiguration extends VendorConfiguration {
       neighbor.setBgpProcess(proc);
       neighbor.setIpv4UnicastAddressFamily(
           ipv4AfBuilder.setAddressFamilyCapabilities(ipv4AfSettingsBuilder.build()).build());
+
+      // EVPN address family — set when 'family evpn signaling' is configured on the group
+      if (Boolean.TRUE.equals(ig.getEvpnAf())) {
+        EvpnAddressFamily.Builder evpnAfBuilder =
+            EvpnAddressFamily.builder()
+                .setPropagateUnmatched(true)
+                .setAddressFamilyCapabilities(
+                    AddressFamilyCapabilities.builder()
+                        .setSendCommunity(true)
+                        .setSendExtendedCommunity(true)
+                        .build())
+                .setL2Vnis(convertL2VniConfigs())
+                .setL3Vnis(convertL3VniConfigs())
+                .setExportPolicy(peerExportPolicyName)
+                .setRouteReflectorClient(
+                    firstNonNull(ig.getClusterId(), routingInstance.getRouterId()) != null
+                        && ig.getClusterId() != null);
+        // NVE IP from vtep-source-interface
+        SwitchOptions so = _masterLogicalSystem.getSwitchOptions();
+        if (so != null && so.getVtepSourceInterface() != null) {
+          org.batfish.datamodel.Interface viIface =
+              _c.getAllInterfaces().get(so.getVtepSourceInterface());
+          if (viIface != null && viIface.getConcreteAddress() != null) {
+            evpnAfBuilder.setNveIp(viIface.getConcreteAddress().getIp());
+          }
+        }
+        neighbor.setEvpnAddressFamily(evpnAfBuilder.build());
+      }
+
       neighbor.build();
     }
     proc.setMultipathEbgp(multipathEbgp);
@@ -2117,6 +2154,12 @@ public final class JuniperConfiguration extends VendorConfiguration {
     for (Vlan vxlan : _masterLogicalSystem.getNamedVlans().values()) {
       if (vxlan.getVniId() == null) {
         continue;
+      }
+      // Exclude VNI VLANs from normalVlanRange so their IRB interfaces are not deactivated by
+      // autostate (these VLANs carry VXLAN overlay traffic and may have no physical members).
+      if (vxlan.getVlanId() != null) {
+        _c.setNormalVlanRange(
+            _c.getNormalVlanRange().difference(IntegerSpace.of(vxlan.getVlanId())));
       }
       String l3Interface = vxlan.getL3Interface();
       if (l3Interface == null) {
@@ -3908,6 +3951,9 @@ public final class JuniperConfiguration extends VendorConfiguration {
     // convert vxlan.
     convertVxlan();
 
+    // convert EVPN Type-5 VRF leaking (after VRFs and policies exist)
+    convertEvpnVrfLeaking();
+
     return _c;
   }
 
@@ -3993,6 +4039,229 @@ public final class JuniperConfiguration extends VendorConfiguration {
         _c.setNormalVlanRange(_c.getNormalVlanRange().difference(IntegerSpace.of(vlan)));
       }
     }.visit(vlanId);
+  }
+
+  /**
+   * Converts EVPN ip-prefix-routes configuration into EVPN VRF leaking on the VI model. For each RI
+   * with ip-prefix-routes and a VNI, creates: (1) Bgpv4ToEvpnVrfLeakConfig on the default VRF
+   * (exports from tenant VRF's BGP into EVPN), (2) EvpnToBgpv4VrfLeakConfig on each importing
+   * tenant VRF, (3) Layer3Vni on the tenant VRF, and (4) a BGP process with redistribution policy
+   * on tenant VRFs that lack one.
+   */
+  @VisibleForTesting
+  void convertEvpnVrfLeaking() {
+    Vrf defaultVrf = _c.getVrfs().get(Configuration.DEFAULT_VRF_NAME);
+    if (defaultVrf == null) {
+      return;
+    }
+    RoutingInstance defaultRi = _masterLogicalSystem.getDefaultRoutingInstance();
+    Ip vtepSourceIp = null;
+    SwitchOptions so = _masterLogicalSystem.getSwitchOptions();
+    if (so != null && so.getVtepSourceInterface() != null) {
+      org.batfish.datamodel.Interface viIface =
+          _c.getAllInterfaces().get(so.getVtepSourceInterface());
+      if (viIface != null && viIface.getConcreteAddress() != null) {
+        vtepSourceIp = viIface.getConcreteAddress().getIp();
+      }
+    }
+
+    // Phase 1: For each RI with ip-prefix-routes and VNI, create export config and Layer3Vni
+    for (Entry<String, RoutingInstance> e : _masterLogicalSystem.getRoutingInstances().entrySet()) {
+      String riName = e.getKey();
+      RoutingInstance ri = e.getValue();
+      if (riName.equals(Configuration.DEFAULT_VRF_NAME)) {
+        continue;
+      }
+      EvpnIpPrefixRoutes ipr = ri.getEvpnIpPrefixRoutes();
+      if (ipr == null || ipr.getVni() == null) {
+        continue;
+      }
+
+      // Resolve route-target (export)
+      ExtendedCommunity exportRt = ri.getVrfTargetExport();
+      if (exportRt == null) {
+        exportRt = ri.getVrfTargetCommunity();
+      }
+      if (exportRt == null) {
+        continue;
+      }
+
+      // Resolve route-distinguisher
+      RouteDistinguisher rd = ri.getRouteDistinguisher();
+      if (rd == null) {
+        continue;
+      }
+
+      // Create Bgpv4ToEvpnVrfLeakConfig on default VRF
+      getOrInitVrfLeakConfig(defaultVrf)
+          .addBgpv4ToEvpnVrfLeakConfig(
+              Bgpv4ToEvpnVrfLeakConfig.builder()
+                  .setImportFromVrf(riName)
+                  .setSrcVrfRouteDistinguisher(rd)
+                  .setAttachRouteTargets(ImmutableSet.of(exportRt))
+                  .build());
+
+      // Create Layer3Vni on tenant VRF
+      Vrf tenantVrf = _c.getVrfs().get(riName);
+      if (tenantVrf != null) {
+        Layer3Vni l3vni =
+            Layer3Vni.builder()
+                .setVni(ipr.getVni())
+                .setSourceAddress(vtepSourceIp)
+                .setUdpPort(Vni.DEFAULT_UDP_PORT)
+                .setSrcVrf(Configuration.DEFAULT_VRF_NAME)
+                .build();
+        tenantVrf.addLayer3Vni(l3vni);
+      }
+
+      // Create BGP process on tenant VRF if needed (for redistribution)
+      if (tenantVrf != null && tenantVrf.getBgpProcess() == null) {
+        Ip routerId = firstNonNull(ri.getRouterId(), defaultRi.getRouterId());
+        Long localAs = firstNonNull(ri.getAs(), defaultRi.getAs());
+        if (routerId != null && localAs != null) {
+          BgpProcess bgpProc = bgpProcessBuilder().setRouterId(routerId).build();
+          tenantVrf.setBgpProcess(bgpProc);
+        }
+      }
+
+      // Create redistribution policy on tenant VRF
+      if (tenantVrf != null && tenantVrf.getBgpProcess() != null) {
+        String redistPolicyName = generatedEvpnIprRedistPolicyName(riName);
+        if (ipr.getExportPolicy() != null
+            && _c.getRoutingPolicies().containsKey(ipr.getExportPolicy())) {
+          // Use the configured export policy
+          RoutingPolicy redistPolicy =
+              RoutingPolicy.builder()
+                  .setOwner(_c)
+                  .setName(redistPolicyName)
+                  .addStatement(
+                      new If(
+                          new CallExpr(ipr.getExportPolicy()),
+                          ImmutableList.of(Statements.ReturnTrue.toStaticStatement())))
+                  .addStatement(Statements.ReturnFalse.toStaticStatement())
+                  .build();
+          _c.getRoutingPolicies().put(redistPolicyName, redistPolicy);
+        } else {
+          // Default: redistribute connected and static
+          RoutingPolicy redistPolicy =
+              RoutingPolicy.builder()
+                  .setOwner(_c)
+                  .setName(redistPolicyName)
+                  .addStatement(
+                      new If(
+                          new MatchProtocol(RoutingProtocol.CONNECTED, RoutingProtocol.STATIC),
+                          ImmutableList.of(Statements.ReturnTrue.toStaticStatement())))
+                  .addStatement(Statements.ReturnFalse.toStaticStatement())
+                  .build();
+          _c.getRoutingPolicies().put(redistPolicyName, redistPolicy);
+        }
+        tenantVrf.getBgpProcess().setRedistributionPolicy(redistPolicyName);
+      }
+    }
+
+    // Phase 2: For each RI with an import RT matching an exported RT, create import config
+    for (Entry<String, RoutingInstance> e : _masterLogicalSystem.getRoutingInstances().entrySet()) {
+      String riName = e.getKey();
+      RoutingInstance ri = e.getValue();
+      if (riName.equals(Configuration.DEFAULT_VRF_NAME)) {
+        continue;
+      }
+      EvpnIpPrefixRoutes ipr = ri.getEvpnIpPrefixRoutes();
+      if (ipr == null || ipr.getVni() == null) {
+        continue;
+      }
+
+      // Resolve import RT
+      ExtendedCommunity importRt = ri.getVrfTargetImport();
+      if (importRt == null) {
+        importRt = ri.getVrfTargetCommunity();
+      }
+      if (importRt == null) {
+        continue;
+      }
+
+      // Create import policy matching the RT community
+      String importPolicyName = generatedEvpnToBgpv4VrfLeakPolicyName(riName);
+      RoutingPolicy importPolicy =
+          RoutingPolicy.builder()
+              .setOwner(_c)
+              .setName(importPolicyName)
+              .addStatement(
+                  new If(
+                      new MatchCommunities(
+                          InputCommunities.instance(), new HasCommunity(new CommunityIs(importRt))),
+                      ImmutableList.of(Statements.ReturnTrue.toStaticStatement())))
+              .addStatement(Statements.ReturnFalse.toStaticStatement())
+              .build();
+      _c.getRoutingPolicies().put(importPolicyName, importPolicy);
+
+      Vrf tenantVrf = _c.getVrfs().get(riName);
+      if (tenantVrf != null) {
+        getOrInitVrfLeakConfig(tenantVrf)
+            .addEvpnToBgpv4VrfLeakConfig(
+                EvpnToBgpv4VrfLeakConfig.builder()
+                    .setImportFromVrf(Configuration.DEFAULT_VRF_NAME)
+                    .setImportPolicy(importPolicyName)
+                    .build());
+      }
+    }
+  }
+
+  private static String generatedEvpnIprRedistPolicyName(String vrfName) {
+    return "~EVPN_IPR_REDIST_POLICY:" + vrfName + "~";
+  }
+
+  private static String generatedEvpnToBgpv4VrfLeakPolicyName(String vrfName) {
+    return "~EVPN_TO_BGPV4_VRF_LEAK_POLICY:" + vrfName + "~";
+  }
+
+  /** Build L3 VNI configs for the EVPN address family on BGP peers. */
+  private ImmutableSortedSet<Layer3VniConfig> convertL3VniConfigs() {
+    ImmutableSortedSet.Builder<Layer3VniConfig> l3vnis = ImmutableSortedSet.naturalOrder();
+    for (Entry<String, RoutingInstance> e : _masterLogicalSystem.getRoutingInstances().entrySet()) {
+      String riName = e.getKey();
+      RoutingInstance ri = e.getValue();
+      if (riName.equals(Configuration.DEFAULT_VRF_NAME)) {
+        continue;
+      }
+      EvpnIpPrefixRoutes ipr = ri.getEvpnIpPrefixRoutes();
+      if (ipr == null || ipr.getVni() == null) {
+        continue;
+      }
+      RouteDistinguisher rd = ri.getRouteDistinguisher();
+      if (rd == null) {
+        continue;
+      }
+      ExtendedCommunity exportRt = ri.getVrfTargetExport();
+      if (exportRt == null) {
+        exportRt = ri.getVrfTargetCommunity();
+      }
+      if (exportRt == null) {
+        continue;
+      }
+      ExtendedCommunity importRt = ri.getVrfTargetImport();
+      if (importRt == null) {
+        importRt = ri.getVrfTargetCommunity();
+      }
+      // importRouteTarget is a regex pattern matching route targets
+      String importRtPattern = importRt != null ? "^" + importRt.matchString() + "$" : ".*";
+      l3vnis.add(
+          Layer3VniConfig.builder()
+              .setVni(ipr.getVni())
+              .setVrf(riName)
+              .setRouteDistinguisher(rd)
+              .setRouteTarget(exportRt)
+              .setImportRouteTarget(importRtPattern)
+              .setAdvertiseV4Unicast(true)
+              .build());
+    }
+    return l3vnis.build();
+  }
+
+  /** Build L2 VNI configs for the EVPN address family on BGP peers. */
+  private ImmutableSortedSet<org.batfish.datamodel.bgp.Layer2VniConfig> convertL2VniConfigs() {
+    // L2 VNI support is not the focus of Type-5 but needed for EVPN AF completeness
+    return ImmutableSortedSet.of();
   }
 
   private static @Nonnull VrfLeakConfig getOrInitVrfLeakConfig(Vrf vrf) {

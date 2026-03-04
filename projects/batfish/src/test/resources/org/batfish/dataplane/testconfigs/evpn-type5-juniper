@@ -1,0 +1,87 @@
+system {
+    host-name evpn-type5-juniper;
+}
+interfaces {
+    lo0 {
+        unit 0 {
+            family inet {
+                address 10.0.0.1/32;
+            }
+        }
+    }
+    ge-0/0/0 {
+        unit 0 {
+            family inet {
+                address 10.1.0.1/24;
+            }
+        }
+    }
+}
+policy-options {
+    policy-statement vrf1-export {
+        term 1 {
+            from protocol direct;
+            then accept;
+        }
+    }
+    policy-statement vrf2-import {
+        term 1 {
+            then accept;
+        }
+    }
+}
+routing-instances {
+    vrf1 {
+        instance-type vrf;
+        protocols {
+            evpn {
+                ip-prefix-routes {
+                    advertise direct-nexthop;
+                    encapsulation vxlan;
+                    vni 1001;
+                    export vrf1-export;
+                }
+            }
+        }
+        interface ge-0/0/0.0;
+        route-distinguisher 10.0.0.1:1001;
+        vrf-target target:65000:1001;
+    }
+    vrf2 {
+        instance-type vrf;
+        protocols {
+            evpn {
+                ip-prefix-routes {
+                    advertise direct-nexthop;
+                    encapsulation vxlan;
+                    vni 1002;
+                }
+            }
+        }
+        route-distinguisher 10.0.0.1:1002;
+        vrf-target target:65000:1001;
+    }
+}
+routing-options {
+    router-id 10.0.0.1;
+    autonomous-system 65000;
+}
+protocols {
+    bgp {
+        group overlay {
+            type internal;
+            local-address 10.0.0.1;
+            family evpn {
+                signaling;
+            }
+        }
+    }
+    evpn {
+        encapsulation vxlan;
+    }
+}
+switch-options {
+    vtep-source-interface lo0.0;
+    route-distinguisher 10.0.0.1:9999;
+    vrf-target target:65000:9999;
+}

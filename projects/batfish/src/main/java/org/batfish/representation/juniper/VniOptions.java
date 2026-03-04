@@ -2,33 +2,24 @@ package org.batfish.representation.juniper;
 
 import java.io.Serializable;
 import javax.annotation.Nullable;
-import org.batfish.datamodel.bgp.RouteDistinguisher;
+import javax.annotation.ParametersAreNonnullByDefault;
 import org.batfish.datamodel.bgp.community.ExtendedCommunity;
 
-public class SwitchOptions implements Serializable {
+/** Per-VNI options configured under {@code protocols evpn vni-options}. */
+@ParametersAreNonnullByDefault
+public final class VniOptions implements Serializable {
 
-  private String _vtepSourceInterface;
-  private RouteDistinguisher _routeDistinguisher;
+  private final int _vniId;
   private @Nullable ExtendedCommunityOrAuto _vrfTargetCommunityOrAuto;
   private @Nullable ExtendedCommunity _vrfTargetImport;
   private @Nullable ExtendedCommunity _vrfTargetExport;
-  private @Nullable String _vrfExportPolicy;
-  private @Nullable String _vrfImportPolicy;
 
-  public String getVtepSourceInterface() {
-    return _vtepSourceInterface;
+  public VniOptions(int vniId) {
+    _vniId = vniId;
   }
 
-  public RouteDistinguisher getRouteDistinguisher() {
-    return _routeDistinguisher;
-  }
-
-  public void setVtepSourceInterface(String vtepSourceInterface) {
-    _vtepSourceInterface = vtepSourceInterface;
-  }
-
-  public void setRouteDistinguisher(RouteDistinguisher routeDistinguisher) {
-    _routeDistinguisher = routeDistinguisher;
+  public int getVniId() {
+    return _vniId;
   }
 
   public @Nullable ExtendedCommunityOrAuto getVrfTargetCommunityOrAuto() {
@@ -54,21 +45,5 @@ public class SwitchOptions implements Serializable {
 
   public void setVrfTargetExport(@Nullable ExtendedCommunity vrfTargetExport) {
     _vrfTargetExport = vrfTargetExport;
-  }
-
-  public @Nullable String getVrfExportPolicy() {
-    return _vrfExportPolicy;
-  }
-
-  public void setVrfExportPolicy(@Nullable String vrfExportPolicy) {
-    _vrfExportPolicy = vrfExportPolicy;
-  }
-
-  public @Nullable String getVrfImportPolicy() {
-    return _vrfImportPolicy;
-  }
-
-  public void setVrfImportPolicy(@Nullable String vrfImportPolicy) {
-    _vrfImportPolicy = vrfImportPolicy;
   }
 }

@@ -130458,6 +130458,22 @@
                   "defaultMetric" : 0,
                   "ebgpMultihop" : false,
                   "enforceFirstAs" : false,
+                  "evpnAddressFamily" : {
+                    "addressFamilyCapabilities" : {
+                      "additionalPathsReceive" : false,
+                      "additionalPathsSelectAll" : false,
+                      "additionalPathsSend" : false,
+                      "advertiseExternal" : false,
+                      "advertiseInactive" : false,
+                      "allowLocalAsIn" : false,
+                      "allowRemoteAsOut" : "NEVER",
+                      "sendCommunity" : true,
+                      "sendExtendedCommunity" : true
+                    },
+                    "exportPolicy" : "~BGP_PEER_EXPORT_POLICY:default:192.168.1.1/32~",
+                    "propagateUnmatched" : true,
+                    "routeReflectorClient" : false
+                  },
                   "group" : "overlay",
                   "ipv4UnicastAddressFamily" : {
                     "addressFamilyCapabilities" : {
@@ -130491,6 +130507,22 @@
                   "defaultMetric" : 0,
                   "ebgpMultihop" : false,
                   "enforceFirstAs" : false,
+                  "evpnAddressFamily" : {
+                    "addressFamilyCapabilities" : {
+                      "additionalPathsReceive" : false,
+                      "additionalPathsSelectAll" : false,
+                      "additionalPathsSend" : false,
+                      "advertiseExternal" : false,
+                      "advertiseInactive" : false,
+                      "allowLocalAsIn" : false,
+                      "allowRemoteAsOut" : "NEVER",
+                      "sendCommunity" : true,
+                      "sendExtendedCommunity" : true
+                    },
+                    "exportPolicy" : "~BGP_PEER_EXPORT_POLICY:default:192.168.1.3/32~",
+                    "propagateUnmatched" : true,
+                    "routeReflectorClient" : false
+                  },
                   "group" : "overlay",
                   "ipv4UnicastAddressFamily" : {
                     "addressFamilyCapabilities" : {
@@ -130524,6 +130556,22 @@
                   "defaultMetric" : 0,
                   "ebgpMultihop" : false,
                   "enforceFirstAs" : false,
+                  "evpnAddressFamily" : {
+                    "addressFamilyCapabilities" : {
+                      "additionalPathsReceive" : false,
+                      "additionalPathsSelectAll" : false,
+                      "additionalPathsSend" : false,
+                      "advertiseExternal" : false,
+                      "advertiseInactive" : false,
+                      "allowLocalAsIn" : false,
+                      "allowRemoteAsOut" : "NEVER",
+                      "sendCommunity" : true,
+                      "sendExtendedCommunity" : true
+                    },
+                    "exportPolicy" : "~BGP_PEER_EXPORT_POLICY:default:192.168.1.5/32~",
+                    "propagateUnmatched" : true,
+                    "routeReflectorClient" : false
+                  },
                   "group" : "overlay",
                   "ipv4UnicastAddressFamily" : {
                     "addressFamilyCapabilities" : {
@@ -130557,6 +130605,22 @@
                   "defaultMetric" : 0,
                   "ebgpMultihop" : false,
                   "enforceFirstAs" : false,
+                  "evpnAddressFamily" : {
+                    "addressFamilyCapabilities" : {
+                      "additionalPathsReceive" : false,
+                      "additionalPathsSelectAll" : false,
+                      "additionalPathsSend" : false,
+                      "advertiseExternal" : false,
+                      "advertiseInactive" : false,
+                      "allowLocalAsIn" : false,
+                      "allowRemoteAsOut" : "NEVER",
+                      "sendCommunity" : true,
+                      "sendExtendedCommunity" : true
+                    },
+                    "exportPolicy" : "~BGP_PEER_EXPORT_POLICY:default:192.168.1.44/32~",
+                    "propagateUnmatched" : true,
+                    "routeReflectorClient" : false
+                  },
                   "group" : "overlay",
                   "ipv4UnicastAddressFamily" : {
                     "addressFamilyCapabilities" : {
